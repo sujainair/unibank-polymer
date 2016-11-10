@@ -1,0 +1,22 @@
+<link rel="import" href="/bower_components/polymer/polymer.html">
+<link rel="import" href="/bower_components/paper-material/paper-material.html">
+<dom-module id="unibank-about">
+    <template>
+        <style>
+            paper-material {
+                font-family: "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
+                font-weight: 4;
+            }
+        </style>
+        <paper-material elevation="0" style="padding:10px;" main>
+            <p>Welcome to the <span style="font-weight:bold;">About</span> page!</p></br>
+            Using the <a href="https://openbankproject.com/">openbankproject</a> sandbox and <a href="https://www.polymer-project.org/">Google Polymer project</a>, I have created this sample multibank application.</br>
+            Feel free to go through the <paper-button><iron-icon icon="av:library-books"></iron-icon>About</paper-button> section to learn about this app, features implemented and how to use them.
+        </paper-material>
+    </template>
+    <script>
+    Polymer({
+      is: 'unibank-about',
+    });
+  </script>
+</dom-module>

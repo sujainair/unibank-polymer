@@ -1,0 +1,7 @@
+{
+  "name": "openbankapi_polymer",
+  "short_name": "openbankapi_polymer",
+  "description": "A sample app for using the openbank API sandbox with polymer",
+  "start_url": "/",
+  "display": "standalone"
+}

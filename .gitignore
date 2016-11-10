@@ -1,0 +1,6 @@
+target
+.idea
+*.iml
+eclipse-launch-profiles
+dev.properties
+firebase_service_account.json

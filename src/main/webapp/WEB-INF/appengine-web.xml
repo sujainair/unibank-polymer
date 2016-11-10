@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<appengine-web-app xmlns="http://appengine.google.com/ns/1.0">
+    <application>${app.id}</application>
+    <version>${app.version}</version>
+    <threadsafe>true</threadsafe>
+    <sessions-enabled>true</sessions-enabled>
+
+    <manual-scaling>
+        <instances>1</instances>
+    </manual-scaling>
+    
+    <system-properties>
+        <property name="java.util.logging.config.file" value="WEB-INF/logging.properties"/>
+    </system-properties>
+
+    <resource-files>
+            <include path="/classes/dev.properties"/>
+            <include path="/classes/firebase_service_account.json"/>
+    </resource-files>
+</appengine-web-app>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" 
+         version="2.5">
+  <servlet>
+    <servlet-name>AddBank</servlet-name>
+    <servlet-class>com.appengine.unibank.servlets.AddBank</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>OauthBank</servlet-name>
+    <servlet-class>com.appengine.unibank.servlets.OauthBank</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>GetBanks</servlet-name>
+    <servlet-class>com.appengine.unibank.servlets.GetBanks</servlet-class>
+  </servlet>
+  <servlet>
+    <servlet-name>MakeTransfer</servlet-name>
+    <servlet-class>com.appengine.unibank.servlets.MakeTransfer</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>AddBank</servlet-name>
+    <url-pattern>/user/addBank</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>OauthBank</servlet-name>
+    <url-pattern>/user/bank/oauth</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>GetBanks</servlet-name>
+    <url-pattern>/user/getBanks</url-pattern>
+  </servlet-mapping>
+  <servlet-mapping>
+    <servlet-name>MakeTransfer</servlet-name>
+    <url-pattern>/user/makeTransfer</url-pattern>
+  </servlet-mapping>
+  <welcome-file-list>
+    <welcome-file>index.html</welcome-file>
+  </welcome-file-list>
+</web-app>

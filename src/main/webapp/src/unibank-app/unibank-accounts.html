@@ -1,0 +1,263 @@
+<link rel="import" href="/bower_components/polymer/polymer.html">
+<link rel="import" href="/bower_components/polymerfire/firebase-document.html">
+<link rel="import" href="/bower_components/paper-material/paper-material.html">
+<link rel="import" href="/bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="/bower_components/iron-collapse/iron-collapse.html">
+<link rel="import" href="/bower_components/paper-progress/paper-progress.html">
+<link rel="import" href="/bower_components/paper-tooltip/paper-tooltip.html">
+
+<dom-module id="unibank-accounts">
+    <style>
+        paper-material {
+            font-family: "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
+        }
+        .progress {
+            position: absolute;
+            width: 98%;
+            top: 50%;
+            padding:5px;
+            text-align:center;
+            font-size:larger;
+        }
+        .error {
+            float:right;
+            color:red;
+            font-size:x-small;
+            padding-top:10px;
+        }
+        .bank {
+            padding-left: 1%;
+            padding-right: 1%;
+            font-size: larger;
+        }
+        .bankButton {
+            cursor: pointer;
+            background-color : white;
+            border: 0px;
+            float: right;
+        }
+        .accountDiv {
+            width : 100%;
+            padding-left: 2%;
+            padding-right: 2%;
+        }
+        .accountButton {
+            font-family: "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
+            width : 100%;
+            background-color : white;
+            cursor: pointer;
+            border-width: thin;
+            font-size: medium;
+        }
+        .iconButton {
+            cursor: pointer;
+            background-color : white;
+            border: 0px;
+        }
+        .transaction {
+            width : 90%;
+            background-color : white;
+            padding-left: 3%;
+            padding-right: 3%;
+            cursor: pointer;
+            font-size: small;
+            border-width: thin;
+        }
+        .details {
+            width : 90%;
+            background-color : white;
+            padding-left: 3%;
+            padding-right: 3%;
+            font-size: small;
+            text-align: -webkit-right;
+        }
+        td{
+            border-style: outset;
+            border-width: 0px 0px 1px 0px;
+            width: 50%;
+        }
+        table{
+            text-align: left;
+            width: 95%;
+        }
+    </style>
+    <template>
+        <paper-material id="progress" elevation="0" class="progress" main>
+            <paper-progress indeterminate style="width:98%"></paper-progress>
+            Fetching your data...
+        </paper-material>
+        <template is="dom-repeat" id="banks" items="{{banks}}">
+            <paper-material elevation="1" style="padding:5px;text-align:center;">
+                <table>
+                    <tr>
+                        <td>
+                            <template is="dom-if" if="{{item.error}}">
+                                <div style="float:left;" class="bank">{{item.id}}</div>
+                                <button id="id_{{item.id}}" on-click="_RemoveBank" class="bankButton bank"><iron-icon icon="remove-circle-outline"></iron-icon></button>
+                                <div class="error">{{item.error}}</div>
+                                <paper-tooltip for="id_{{item.id}}" offset="0">Remove bank '{{item.id}}'</paper-tooltip>
+                            </template>
+                            <template is="dom-if" if="{{item.name}}">
+                                <div style="float:left;" class="bank">{{item.name}}</div>
+                                <button id="id_{{item.id}}" on-click="_RemoveBank" class="bankButton bank"><iron-icon icon="remove-circle-outline"></iron-icon></button>
+                                <div style="float:right;" class="bank">{{item.balance}}</div>
+                                <paper-tooltip for="id_{{item.id}}" offset="0">Remove bank '{{item.name}}'</paper-tooltip>
+                            </template>
+                        </td>
+                    </tr>
+                </table>
+                <template is="dom-repeat" id="accounts" items="{{item.accounts}}">
+                    <table class="accountDiv">
+                        <tr>
+                            <td style="width:92%;border:0px;">
+                                <template is="dom-if" if="{{item.error}}">
+                                    <div style="float:left;">{{item.name}}</div>
+                                    <div class="error">{{item.error}}</div>
+                                </template>
+                                <template is="dom-if" if="[[! item.error]]">
+                                    <button id="acc_button_{{item.id}}" class="accountButton" on-click="_Toggle">
+                                        <div style="float:left;">{{item.name}}</div>
+                                        <div style="float:right;">{{item.balance}}</div>
+                                    </button>
+                                    <paper-tooltip for="acc_button_{{item.id}}" offset="0">Click to view recent transactions</paper-tooltip>
+                                </template>
+                            </td>
+                            <template is="dom-if" if="[[! item.error]]">
+                                <td style="width:4%;border:0px;">
+                                    <button id="transaction_{{item.id}}" on-click="_Transfer" class="iconButton"><iron-icon icon="launch"></iron-icon></button>
+                                    <paper-tooltip for="transaction_{{item.id}}" offset="0">Send money from '{{item.name}}'</paper-tooltip>
+                                </td>
+                            </template>
+                            <td style="width:4%;border:0px;">
+                                <button id="delete_{{item.id}}" on-click="_RemoveAccount" class="iconButton"><iron-icon icon="remove-circle-outline"></iron-icon></button>
+                                <paper-tooltip for="delete_{{item.id}}" offset="0">Remove account - '{{item.name}}'</paper-tooltip>
+                            </td>
+                        </tr>
+                    </table>
+                    <iron-collapse id="A{{item.id}}" style="text-align:center;">
+                        <template is="dom-if" if="[[_CheckTransaction(item.transactions)]]">
+                            <div class="transaction" style="color:green">No transactions yet</div>
+                        </template>
+                        <template is="dom-repeat" id="transactions" items="{{item.transactions}}">
+                            <button id="details_{{item.id}}" class="transaction" on-click="_Toggle">
+                                <div>
+                                <div style="float:left;">{{item.other}}</div>
+                                <div style="float:right;">{{item.amount}}</div>
+                                </div>
+                            </button>
+                            <paper-tooltip for="details_{{item.id}}" offset="0">View details of this transaction</paper-tooltip>
+                            <iron-collapse id="A{{item.id}}" style="text-align:center;">
+                                <div class="details">
+                                    <table>
+                                        <tr>
+                                            <td>Transaction ID</td>
+                                            <td>{{item.id}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Time</td>
+                                            <td>{{item.time}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Partner Bank</td>
+                                            <td>{{item.bank}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Description</td>
+                                            <td>{{item.description}}</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Balance after transaction</td>
+                                            <td>{{item.balance}}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </iron-collapse>
+                        </template>
+                    </iron-collapse>
+                </template>
+            </paper-material>
+        </template>
+        <paper-dialog id="transferDialog">
+            <paper-material elevation="0" style="padding:5px;" main>
+                Create a new Transfer<br>
+                <form is="iron-form" id="createTransferForm">
+                    <paper-input name="toBankID" label="Bank ID" required allowed-pattern="[a-zA-Z0-9_-]" auto-validate error-message="Value required"></paper-input>
+                    <paper-input name="toAccID" label="Account ID" required allowed-pattern="[a-zA-Z0-9_-]" auto-validate error-message="Value required"></paper-input>
+                    <paper-input name="trnAmt" label="Amount" required allowed-pattern="[0-9]" auto-validate error-message="Value required"></paper-input>
+                    <paper-input name="desc" label="Description"></paper-input>
+                    <div align="center" style="padding-top:10px;">
+                        <paper-button raised on-click="_MakeTransfer" style="background-color:green;color:white">Transfer</paper-button>
+                        <paper-button raised onclick="transferDialog.close()" style="background-color:green;color:white">Cancel</paper-button>
+                    </div>
+                </form>
+            </paper-material>
+        </paper-dialog>
+    </template>
+    <script>
+    Polymer({
+      is: 'unibank-accounts',
+      properties : {
+        banks : {
+            type: Object,
+            observer: '_BankChanged',
+        },
+        action : {
+            type: Object,
+            readOnly: true,
+            notify: true,
+        },
+      },
+      _Toggle : function(e){
+        this.$$('#A' + e.model.item.id).toggle(); //Added A to ensure valid id
+      },
+      _BankChanged : function(newBank, oldBank){
+        this.$.progress.remove();
+      },
+      _Transfer : function(e){
+        this.userAccountID = e.model.item.name;
+        //item.id is accID_bankID
+        this.userBankID = e.model.item.id.replace(e.model.item.name + "_","");
+        this.$.transferDialog.open();
+      },
+      _MakeTransfer: function(){
+        action = {
+            type : "transfer",
+            from_bank : this.userBankID,
+            from_acc : this.userAccountID,
+            to_bank : this.$.createTransferForm.toBankID.value,
+            to_acc : this.$.createTransferForm.toAccID.value,
+            amount : this.$.createTransferForm.trnAmt.value,
+            description : this.$.createTransferForm.desc.value,
+        };
+        this._setAction(action);
+        this.$.transferDialog.close();
+      },
+      _setAction : function(action){
+        this.action = action;
+      },
+      _CheckTransaction : function(transactions){
+        if (transactions !== undefined){
+            if(transactions.length === 0 ) {
+                return true;
+            }
+        }
+        else return false;
+      },
+      _RemoveBank: function(e){
+        action ={
+            type: "remove bank",
+            bank: e.model.item.id,
+        };
+        this._setAction(action);
+      },
+      _RemoveAccount: function(e){
+        action = {
+            type: "remove account",
+            bank: e.model.item.id.replace(e.model.item.name + "_",""),
+            account: e.model.item.name,
+        };
+        this._setAction(action);
+      },
+    });
+  </script>
+</dom-module>
