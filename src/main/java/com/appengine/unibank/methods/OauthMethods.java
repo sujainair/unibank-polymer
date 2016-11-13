@@ -21,11 +21,11 @@ import java.util.Scanner;
  */
 public class OauthMethods {
     public static String[] initiate(String callback)throws IOException, OAuthMessageSignerException, OAuthExpectationFailedException, OAuthCommunicationException {
-        String CONS_KEY = OauthProperties.getInstance().CONS_KEY;
-        String CONS_SECRET = OauthProperties.getInstance().CONS_SECRET;
+        String CONS_KEY = OauthProperties.getInstance().getCONS_KEY();
+        String CONS_SECRET = OauthProperties.getInstance().getCONS_SECRET();
 
         //Create an HttpURLConnection and add some headers
-        URL url = new URL("https://apisandbox.openbankproject.com/oauth/initiate");
+        URL url = new URL(OauthProperties.getInstance().getOAUTH_LINK() + "/initiate");
         HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
         urlConnection.setRequestProperty("Accept", "application/json");
         urlConnection.setRequestMethod("POST");
@@ -54,8 +54,8 @@ public class OauthMethods {
     }
 
     public static String[] initiate(String endpointUrl, String oauthVerifier, String token, String tokenSecret) throws IOException, OAuthMessageSignerException, OAuthExpectationFailedException, OAuthCommunicationException {
-        String CONS_KEY = OauthProperties.getInstance().CONS_KEY;
-        String CONS_SECRET = OauthProperties.getInstance().CONS_SECRET;
+        String CONS_KEY = OauthProperties.getInstance().getCONS_KEY();
+        String CONS_SECRET = OauthProperties.getInstance().getCONS_SECRET();
 
         //Create an HttpURLConnection and add some headers
         URL url = new URL(endpointUrl);
@@ -77,7 +77,6 @@ public class OauthMethods {
         try {
             //System.out.println("Response initiate2 : " + urlConnection.getResponseCode() + " " + urlConnection.getResponseMessage());
             InputStream in = new BufferedInputStream(urlConnection.getInputStream());
-            //System.out.println(inputStreamString);
             response = new Scanner(in,"UTF-8").useDelimiter("\\A").next();
         }
         finally {
@@ -90,8 +89,8 @@ public class OauthMethods {
     }
 
     public static String get(String endpointUrl, String token, String tokenSecret)throws IOException, OAuthMessageSignerException, OAuthExpectationFailedException, OAuthCommunicationException {
-        String CONS_KEY = OauthProperties.getInstance().CONS_KEY;
-        String CONS_SECRET = OauthProperties.getInstance().CONS_SECRET;
+        String CONS_KEY = OauthProperties.getInstance().getCONS_KEY();
+        String CONS_SECRET = OauthProperties.getInstance().getCONS_SECRET();
 
         //Create an HttpURLConnection and add some headers
         URL url = new URL(endpointUrl);
@@ -109,9 +108,7 @@ public class OauthMethods {
         try {
             //System.out.println("Response: " + urlConnection.getResponseCode() + " " + urlConnection.getResponseMessage());
             InputStream in = new BufferedInputStream(urlConnection.getInputStream());
-            String inputStreamString = new Scanner(in,"UTF-8").useDelimiter("\\A").next();
-            //System.out.println(inputStreamString);
-            return inputStreamString;
+            return new Scanner(in,"UTF-8").useDelimiter("\\A").next();
         }
         finally {
             urlConnection.disconnect();
@@ -119,8 +116,8 @@ public class OauthMethods {
     }
 
     public static String post(String endpointUrl, String JSONPayload, String token, String tokenSecret)throws IOException, OAuthMessageSignerException, OAuthExpectationFailedException, OAuthCommunicationException {
-        String CONS_KEY = OauthProperties.getInstance().CONS_KEY;
-        String CONS_SECRET = OauthProperties.getInstance().CONS_SECRET;
+        String CONS_KEY = OauthProperties.getInstance().getCONS_KEY();
+        String CONS_SECRET = OauthProperties.getInstance().getCONS_SECRET();
 
         //Create an HttpURLConnection and add some headers
         URL url = new URL(endpointUrl);
@@ -151,9 +148,7 @@ public class OauthMethods {
         try {
             //System.out.println("Response: " + urlConnection.getResponseCode() + " " + urlConnection.getResponseMessage());
             InputStream in = new BufferedInputStream(urlConnection.getInputStream());
-            String inputStreamString = new Scanner(in,"UTF-8").useDelimiter("\\A").next();
-            //System.out.println(inputStreamString);
-            return inputStreamString;
+            return new Scanner(in,"UTF-8").useDelimiter("\\A").next();
         }
         finally {
             urlConnection.disconnect();

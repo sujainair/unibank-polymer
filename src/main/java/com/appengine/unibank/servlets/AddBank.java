@@ -2,6 +2,7 @@ package com.appengine.unibank.servlets;
 
 import com.appengine.unibank.methods.FirebaseMethods;
 import com.appengine.unibank.methods.OauthMethods;
+import com.appengine.unibank.methods.OauthProperties;
 import oauth.signpost.exception.OAuthCommunicationException;
 import oauth.signpost.exception.OAuthExpectationFailedException;
 import oauth.signpost.exception.OAuthMessageSignerException;
@@ -26,17 +27,14 @@ public class AddBank extends HttpServlet {
         }
         req.getSession().setAttribute("uid",uid);
         try {
-            String[] token = OauthMethods.initiate("http://1-dot-driven-rider-133516.appspot.com/initiate");
-            //String[] token = OauthMethods.initiate("http://localhost:8080/user/bank/oauth");
+            String[] token = OauthMethods.initiate(OauthProperties.getInstance().getCALLBACK_LINK());
             req.getSession().setAttribute("token",token[0]);
             req.getSession().setAttribute("token_secret",token[1]);
-            resp.sendRedirect("https://apisandbox.openbankproject.com/oauth/authorize?oauth_token=" + token[0]);
+            resp.sendRedirect(OauthProperties.getInstance().getOAUTH_LINK() + "/authorize?oauth_token=" + token[0]);
         } catch (OAuthMessageSignerException | OAuthExpectationFailedException | OAuthCommunicationException e) {
             resp.getWriter().print("An error occured");
             e.printStackTrace();
             req.getSession().invalidate();
-        } catch (IOException e){
-            throw e;
         }
     }
 

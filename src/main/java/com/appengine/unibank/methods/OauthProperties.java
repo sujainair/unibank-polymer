@@ -11,7 +11,7 @@ import java.util.Properties;
  */
 public class OauthProperties {
     private static OauthProperties instance = null;
-    public String CONS_KEY, CONS_SECRET, API_LINK;
+    private String CONS_KEY, CONS_SECRET, API_LINK, OAUTH_LINK, CALLBACK_LINK;
 
     private OauthProperties() throws IOException{
         Properties prop = new Properties();
@@ -34,6 +34,8 @@ public class OauthProperties {
         CONS_KEY = prop.getProperty("CONS_KEY");
         CONS_SECRET = prop.getProperty("CONS_SECRET");
         API_LINK = prop.getProperty("API_LINK");
+        OAUTH_LINK = prop.getProperty("OAUTH_LINK");
+        CALLBACK_LINK = prop.getProperty("CALLBACK_LINK");
     }
 
     public static OauthProperties getInstance() throws IOException {
@@ -42,4 +44,25 @@ public class OauthProperties {
         }
         return instance;
     }
+
+    public String getCONS_KEY() {
+        return CONS_KEY;
+    }
+
+    public String getCONS_SECRET() {
+        return CONS_SECRET;
+    }
+
+    public String getAPI_LINK() {
+        return API_LINK;
+    }
+
+    public String getOAUTH_LINK() {
+        return OAUTH_LINK;
+    }
+
+    public String getCALLBACK_LINK() {
+        return CALLBACK_LINK;
+    }
+
 }

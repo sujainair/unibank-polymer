@@ -60,7 +60,7 @@ public class GetBanksJSONGenerator {
             JSONObject bankDetails = new JSONObject().put("error","Error connecting to the bank!"); //Default error
             try {
                 //Get bank name from this ID
-                String getBankDetailsUrl = OauthProperties.getInstance().API_LINK + "/banks/" + nextBank;
+                String getBankDetailsUrl = OauthProperties.getInstance().getAPI_LINK() + "/banks/" + nextBank;
                 bankDetails = new JSONObject(OauthMethods.get(getBankDetailsUrl,token,tokenSecret));
                 bank.setName(bankDetails.getString("full_name"));
                 bank.setAccounts(getAccountsDetails(accountsObj,nextBank));
@@ -83,10 +83,6 @@ public class GetBanksJSONGenerator {
      * @param accountsObj JSON under /users/uid/accounts/bank/
      * @param bankID The bank to which this JSON belongs
      * @return JSONArray of all accounts and transactions for the user
-     * @throws OAuthExpectationFailedException
-     * @throws OAuthCommunicationException
-     * @throws OAuthMessageSignerException
-     * @throws IOException
      */
     private static JSONArray getAccountsDetails(JSONObject accountsObj,String bankID) throws IOException {
         JSONArray accountDetails = new JSONArray(); //Value to return
@@ -102,7 +98,7 @@ public class GetBanksJSONGenerator {
         while (accounts.hasNext()){
             String nextAcc = accountsObj.getString(accounts.next()); //Get value at key i.e. account ID
 
-            String getAccDetailsUrl = OauthProperties.getInstance().API_LINK + "/banks/" + bankID + "/accounts/" + nextAcc + "/owner/account";
+            String getAccDetailsUrl = OauthProperties.getInstance().getAPI_LINK() + "/banks/" + bankID + "/accounts/" + nextAcc + "/owner/account";
             Account account = new Account();
             account.setName(nextAcc); //Set default
             //Create id for html element
@@ -115,7 +111,7 @@ public class GetBanksJSONGenerator {
                 //Create an account with this name
                 account = new Account(accDetails.getString("id"), accId, accDetails.getJSONObject("balance").getDouble("amount"));
                 //Get transactions for this account from apisandbox request
-                String getUrl = OauthProperties.getInstance().API_LINK + "/banks/" + bankID + "/accounts/" + nextAcc + "/owner/transactions";
+                String getUrl = OauthProperties.getInstance().getAPI_LINK() + "/banks/" + bankID + "/accounts/" + nextAcc + "/owner/transactions";
                 JSONObject transactions = new JSONObject(OauthMethods.get(getUrl, token, tokenSecret));
                 account.setTransactions(getTransactionsDetails(transactions));
             } catch (IOException | OAuthMessageSignerException | OAuthExpectationFailedException | OAuthCommunicationException e) {
@@ -180,7 +176,6 @@ public class GetBanksJSONGenerator {
         });
         //Wait for the bankList to be updated
         while(! done.get());
-        JSONObject banks = new JSONObject(jsonRef.get().toString());
-        return banks;
+        return new JSONObject(jsonRef.get().toString());
     }
 }

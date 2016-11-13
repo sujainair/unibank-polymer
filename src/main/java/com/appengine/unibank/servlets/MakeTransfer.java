@@ -43,7 +43,7 @@ public class MakeTransfer extends HttpServlet {
                                 .put("currency","EUR")
                                 .put("amount",actionParams.getString("amount")))
                 .put("description",actionParams.getString("description"));
-        String transferURL = OauthProperties.getInstance().API_LINK + "/banks/" + actionParams.getString("from_bank") + "/accounts/" + actionParams.getString("from_acc") + "/owner/transaction-request-types/SANDBOX_TAN/transaction-requests";
+        String transferURL = OauthProperties.getInstance().getAPI_LINK() + "/banks/" + actionParams.getString("from_bank") + "/accounts/" + actionParams.getString("from_acc") + "/owner/transaction-request-types/SANDBOX_TAN/transaction-requests";
         FirebaseDatabase firebasedatabase = FirebaseDatabase.getInstance(FirebaseMethods.getApp());
         DatabaseReference ref = firebasedatabase.getReference("/users/" + uid + "/accounts/" + actionParams.getString("from_bank"));
         JSONObject tokenInfo = getTokenInfo(ref);
@@ -64,7 +64,7 @@ public class MakeTransfer extends HttpServlet {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 JSONObject jsonObject = new JSONObject();
                 for (DataSnapshot each: dataSnapshot.getChildren()) {
-                    if(each.getKey().toString().contentEquals("token")||each.getKey().toString().contentEquals("token_secret")) {
+                    if(each.getKey().contentEquals("token")||each.getKey().contentEquals("token_secret")) {
                         jsonObject.put(each.getKey(), each.getValue());
                     }
                 }
