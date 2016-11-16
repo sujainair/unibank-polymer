@@ -23,6 +23,9 @@
             float:right;
             color:red;
             font-size:x-small;
+            cursor: pointer;
+            background-color : white;
+            border: 0px;
             padding-top:10px;
         }
         .bank {
@@ -94,8 +97,9 @@
                             <template is="dom-if" if="{{item.error}}">
                                 <div style="float:left;" class="bank">{{item.id}}</div>
                                 <button id="id_{{item.id}}" on-click="_RemoveBank" class="bankButton bank"><iron-icon icon="remove-circle-outline"></iron-icon></button>
-                                <div class="error">{{item.error}}</div>
+                                <button id="verify_{{item.id}}" on-click="_VerifyBank" class="error">{{item.error}}</button>
                                 <paper-tooltip for="id_{{item.id}}" offset="0">Remove bank '{{item.id}}'</paper-tooltip>
+                                <paper-tooltip for="verify_{{item.id}}" offset="0">Verify '{{item.id}}' again</paper-tooltip>
                             </template>
                             <template is="dom-if" if="{{item.name}}">
                                 <div style="float:left;" class="bank">{{item.name}}</div>
@@ -255,6 +259,13 @@
             type: "remove account",
             bank: e.model.item.id.replace(e.model.item.name + "_",""),
             account: e.model.item.name,
+        };
+        this._setAction(action);
+      },
+      _VerifyBank: function(e){
+        action = {
+            type: "verify bank",
+            bank: e.model.item.id,
         };
         this._setAction(action);
       },

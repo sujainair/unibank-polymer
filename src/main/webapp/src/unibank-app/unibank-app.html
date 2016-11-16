@@ -105,10 +105,10 @@
                 </div>
             </paper-material>
         </paper-dialog>
-        <paper-dialog id="waitAuth" always-on-top="true" modal="true">
+        <paper-dialog id="waitAuth" always-on-top="true">
             <paper-material elevation="0" style="padding:5px;" main>
                 <paper-spinner active></paper-spinner>
-                Please authenticate with the bank on pop-up window!<br/> Refresh page if this dialog remains after authentication.
+                Please authenticate with the bank on pop-up window!
             </paper-material>
         </paper-dialog>
         <paper-dialog id="redirectDialog" always-on-top="true" modal="true">
@@ -222,11 +222,20 @@
                         .then(function(){
                             _this.$.ajaxAddBank.params = { bank : bank };
                             _this.$.ajaxAddBank.generateRequest();
+                            _this.$.addDialog.close();
                         });
                     ref.once("child_changed",function(childSnapshot, prevChildKey){
                         if(childSnapshot.val() === "valid"){
                             _this.$.waitAuth.close();
-                            location.reload();
+                            _this.user.getToken(true)
+                            .then(function(idToken){
+                                _this.$.ajaxGetBanks.params = { idToken : idToken };
+                                _this.$.ajaxGetBanks.generateRequest();
+                            })
+                            .catch(function(error) {
+                                _this.message = "Error connecting to database. Could not load data!"
+                                _this.$.msgDialog.open();
+                            });
                         }
                     });
                 }
@@ -323,6 +332,30 @@
                     .catch(function(error) {
                         _this.message = "Error connecting to database. Try again in some time";
                         _this.$.msgDialog.open();
+                    });
+                break;
+            case 'verify bank' :
+                this.$.ajaxAddBank.params = { bank : this.accAction.bank };
+                this.$.ajaxAddBank.generateRequest();
+                this.$.waitAuth.open();
+                bank = this.accAction.bank;
+                uid = this.user.uid;
+                this.firebasePath = "/users/" + uid + "/accounts/" + bank;
+                ref=this.$.firebasedoc.ref;
+                ref.once("child_changed",function(childSnapshot, prevChildKey){
+                        if(childSnapshot.val() === "valid"){
+                            _this.$.waitAuth.close();
+                            _this.user.getToken(true)
+                            .then(function(idToken){
+                                _this.$.ajaxGetBanks.params = { idToken : idToken };
+                                _this.$.ajaxGetBanks.generateRequest();
+                            })
+                            .catch(function(error) {
+                                _this.message = "Error connecting to database. Could not load data!"
+                                _this.$.msgDialog.open();
+                                console.log(error);
+                            });
+                        }
                     });
                 break;
         }
