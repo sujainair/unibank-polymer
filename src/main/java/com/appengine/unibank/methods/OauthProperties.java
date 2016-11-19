@@ -17,7 +17,7 @@ public class OauthProperties {
         Properties prop = new Properties();
         InputStream propFile = null;
         try{
-            propFile = this.getClass().getResourceAsStream("../../../../dev.properties");
+            propFile = this.getClass().getResourceAsStream("/dev.properties");
             prop.load(propFile);
         } catch (FileNotFoundException e){
             System.err.println("[ERROR] Properties file missing!");

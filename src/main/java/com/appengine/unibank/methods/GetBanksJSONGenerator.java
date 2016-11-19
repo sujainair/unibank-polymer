@@ -132,14 +132,16 @@ public class GetBanksJSONGenerator {
     private static JSONArray getTransactionsDetails(JSONObject transactionsObj){
         JSONArray transactionsDetails = new JSONArray(); //Value to return
         JSONArray transactions = transactionsObj.getJSONArray("transactions");
-        for(int i=0; i<transactions.length(); i++){
-            Transaction transaction = new Transaction(transactions.getJSONObject(i).getString("id"),
-                    transactions.getJSONObject(i).getJSONObject("other_account").getJSONObject("holder").getString("name"),
-                    transactions.getJSONObject(i).getJSONObject("details").getJSONObject("value").getDouble("amount"),
-                    transactions.getJSONObject(i).getJSONObject("details").getString("completed"),
-                    transactions.getJSONObject(i).getJSONObject("other_account").getJSONObject("bank").getString("name"),
-                    transactions.getJSONObject(i).getJSONObject("details").getJSONObject("new_balance").getDouble("amount"),
-                    transactions.getJSONObject(i).getJSONObject("details").get("description").toString());
+        Iterator transactionItr = transactions.iterator();
+        while (transactionItr.hasNext()){
+            JSONObject transactionObj = (JSONObject) transactionItr.next();
+            Transaction transaction = new Transaction(transactionObj.getString("id"),
+                    transactionObj.getJSONObject("other_account").getJSONObject("holder").getString("name"),
+                    transactionObj.getJSONObject("details").getJSONObject("value").getDouble("amount"),
+                    transactionObj.getJSONObject("details").getString("completed"),
+                    transactionObj.getJSONObject("other_account").getJSONObject("bank").getString("name"),
+                    transactionObj.getJSONObject("details").getJSONObject("new_balance").getDouble("amount"),
+                    transactionObj.getJSONObject("details").get("description").toString());
             transactionsDetails.put(transaction.getTransaction());
         }
         return transactionsDetails;

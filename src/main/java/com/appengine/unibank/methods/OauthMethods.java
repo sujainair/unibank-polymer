@@ -75,7 +75,6 @@ public class OauthMethods {
         String response = null;
         //Send the request and read the output
         try {
-            //System.out.println("Response initiate2 : " + urlConnection.getResponseCode() + " " + urlConnection.getResponseMessage());
             InputStream in = new BufferedInputStream(urlConnection.getInputStream());
             response = new Scanner(in,"UTF-8").useDelimiter("\\A").next();
         }
@@ -106,7 +105,6 @@ public class OauthMethods {
 
         //Send the request and read the output
         try {
-            //System.out.println("Response: " + urlConnection.getResponseCode() + " " + urlConnection.getResponseMessage());
             InputStream in = new BufferedInputStream(urlConnection.getInputStream());
             return new Scanner(in,"UTF-8").useDelimiter("\\A").next();
         }
@@ -137,7 +135,6 @@ public class OauthMethods {
         try {
             outputStreamWriter = new OutputStreamWriter(urlConnection.getOutputStream(), "UTF-8");
             outputStreamWriter.write(JSONPayload);
-            //System.out.println(JSONPayload);
         } finally {
             if (outputStreamWriter != null) {
                 outputStreamWriter.close();
@@ -146,7 +143,6 @@ public class OauthMethods {
 
         //Send the request and read the output
         try {
-            //System.out.println("Response: " + urlConnection.getResponseCode() + " " + urlConnection.getResponseMessage());
             InputStream in = new BufferedInputStream(urlConnection.getInputStream());
             return new Scanner(in,"UTF-8").useDelimiter("\\A").next();
         }
