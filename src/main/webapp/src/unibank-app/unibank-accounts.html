@@ -4,6 +4,7 @@
 <link rel="import" href="/bower_components/iron-icon/iron-icon.html">
 <link rel="import" href="/bower_components/iron-collapse/iron-collapse.html">
 <link rel="import" href="/bower_components/paper-progress/paper-progress.html">
+<link rel="import" href="/bower_components/iron-a11y-keys/iron-a11y-keys.html">
 <link rel="import" href="/bower_components/paper-tooltip/paper-tooltip.html">
 
 <dom-module id="unibank-accounts">
@@ -116,7 +117,8 @@
                             <td style="width:92%;border:0px;">
                                 <template is="dom-if" if="{{item.error}}">
                                     <div style="float:left;">{{item.name}}</div>
-                                    <div class="error">{{item.error}}</div>
+                                    <button id="verify_{{item.id}}" on-click="_VerifyAcc" class="error">{{item.error}}</button>
+                                    <paper-tooltip for="verify_{{item.id}}" offset="0">Verify '{{item.id}}' again</paper-tooltip>
                                 </template>
                                 <template is="dom-if" if="[[! item.error]]">
                                     <button id="acc_button_{{item.id}}" class="accountButton" on-click="_Toggle">
@@ -185,7 +187,7 @@
             <paper-material elevation="0" style="padding:5px;" main>
                 Create a new Transfer<br>
                 <form is="iron-form" id="createTransferForm">
-                    <paper-input name="toBankID" label="Bank ID" required allowed-pattern="[a-zA-Z0-9_-]" auto-validate error-message="Value required"></paper-input>
+                    <paper-input name="toBankID" label="Bank ID" required allowed-pattern="[a-zA-Z0-9_-]" auto-validate error-message="Value required" autofocus></paper-input>
                     <paper-input name="toAccID" label="Account ID" required allowed-pattern="[a-zA-Z0-9_-]" auto-validate error-message="Value required"></paper-input>
                     <paper-input name="trnAmt" label="Amount" required allowed-pattern="[0-9]" auto-validate error-message="Value required"></paper-input>
                     <paper-input name="desc" label="Description"></paper-input>
@@ -193,6 +195,7 @@
                         <paper-button raised on-click="_MakeTransfer" style="background-color:green;color:white">Transfer</paper-button>
                         <paper-button raised onclick="transferDialog.close()" style="background-color:green;color:white">Cancel</paper-button>
                     </div>
+                    <iron-a11y-keys id="a11y" keys="enter" on-keys-pressed="_MakeTransfer"></iron-a11y-keys>
                 </form>
             </paper-material>
         </paper-dialog>
@@ -267,6 +270,13 @@
             type: "verify bank",
             bank: e.model.item.id,
         };
+        this._setAction(action);
+      },
+      _VerifyAcc: function(e){
+        action = {
+            type: "verify bank",
+            bank: e.model.item.id.replace(e.model.item.name + "_",""),
+        }
         this._setAction(action);
       },
     });

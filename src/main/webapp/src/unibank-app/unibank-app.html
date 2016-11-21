@@ -17,6 +17,7 @@
 <link rel="import" href="/bower_components/paper-input/paper-input.html">
 <link rel="import" href="/bower_components/iron-form/iron-form.html">
 <link rel="import" href="/bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="/bower_components/iron-a11y-keys/iron-a11y-keys.html">
 <link rel="import" href="/bower_components/paper-progress/paper-progress.html">
 <link rel="import" href="/bower_components/paper-material/paper-material.html">
 <link rel="import" href="/src/unibank-app/unibank-accounts.html">
@@ -121,11 +122,12 @@
             <paper-material elevation="0" style="padding:5px;" main>
                 Add new bank account<br>
                 <form is="iron-form" id="addAccountForm">
-                    <paper-input name="bank" label="Bank ID" allowed-pattern="[a-zA-Z0-9_-]" required auto-validate error-message="Value required"></paper-input>
+                    <paper-input name="bank" label="Bank ID" allowed-pattern="[a-zA-Z0-9_-]" required auto-validate error-message="Value required" autofocus></paper-input>
                     <paper-input name="ac_name" label="Account ID" allowed-pattern="[a-zA-Z0-9_-]" required auto-validate error-message="Value required"></paper-input>
                     <div align="center" style="padding-top:10px;">
                         <paper-button raised on-click="_AddAccount" style="background-color:green;color:white"><iron-icon icon="add-box"></iron-icon>ADD</paper-button>
                     </div>
+                    <iron-a11y-keys id="a11y" keys="enter" on-keys-pressed="_AddAccount"></iron-a11y-keys>
                 </form>
             </paper-material>
         </paper-dialog>
@@ -153,12 +155,12 @@
       	},
       },
       _TailChanged : function(tail,oldTail){
-      	_this=this;
       	if(this.tail.__queryParams.action === 'addBank'){
             this.$.redirectDialog.open();
       	}
       },
       _StatusKnownChanged : function(statusKnown, oldStatusKnown){
+        _this = this;
         if( statusKnown ){
             if(! this.$.auth.signedIn){
                 this.$.loginFailDialog.open();
@@ -343,7 +345,7 @@
                 this.firebasePath = "/users/" + uid + "/accounts/" + bank;
                 ref=this.$.firebasedoc.ref;
                 ref.once("child_changed",function(childSnapshot, prevChildKey){
-                        if(childSnapshot.val() === "valid"){
+                        if(childSnapshot.val() === "valid" || childSnapshot.key === "token" ){
                             _this.$.waitAuth.close();
                             _this.user.getToken(true)
                             .then(function(idToken){
@@ -361,6 +363,7 @@
         }
       },
       _TransferDone: function(event){
+        _this = this;
         response = event.detail.response;
         if(response.hasOwnProperty('error')){
             this.message = response.error;

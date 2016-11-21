@@ -1,5 +1,9 @@
 <link rel="import" href="/bower_components/polymer/polymer.html">
 <link rel="import" href="/bower_components/paper-material/paper-material.html">
+<link rel="import" href="/bower_components/iron-icons/av-icons.html">
+<link rel="import" href="/bower_components/iron-icons/social-icons.html">
+<link rel="import" href="/bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="/bower_components/paper-button/paper-button.html">
 <dom-module id="unibank-home">
     <template>
         <style>
@@ -10,8 +14,10 @@
         </style>
         <paper-material elevation="0" style="padding:10px;" main>
             <p>Welcome to the <span style="font-weight:bold;">UniBank</span> App!</p></br>
-            Using the <a href="https://openbankproject.com/">openbankproject</a> sandbox and <a href="https://www.polymer-project.org/">Google Polymer project</a>, I have created this sample multibank application.</br>
-            Feel free to go through the <paper-button onclick="window.location='/about'"><iron-icon icon="av:library-books"></iron-icon>About</paper-button> section to learn about this app, features implemented and how to use them.
+            Using the <a href="https://openbankproject.com/">openbankproject</a> sandbox environment, the <a href="https://www.polymer-project.org/">Google Polymer project</a> framework, a <a href="https://firebase.google.com/">Firebase</a> database and Google Cloud's <a href="https://cloud.google.com/">appengine</a> service, I have created this sample multibank account management application.</br>
+            This application was my effort to learn something and keep myself entertained outside of work. I would also appreciate your reviews to help me get better at my craft.<br/>
+            Feel free to go through the <paper-button onclick="window.location='/index.html?page=about'"><iron-icon icon="av:library-books"></iron-icon>About</paper-button> section to find out more about me and this app.<br/>
+            You can find the source at <a href="https://github.com/sujainair/unibank-polymer">GitHub</a>.
         </paper-material>
     </template>
     <script>
