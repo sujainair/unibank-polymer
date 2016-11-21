@@ -118,7 +118,7 @@
                                 <template is="dom-if" if="{{item.error}}">
                                     <div style="float:left;">{{item.name}}</div>
                                     <button id="verify_{{item.id}}" on-click="_VerifyAcc" class="error">{{item.error}}</button>
-                                    <paper-tooltip for="verify_{{item.id}}" offset="0">Verify '{{item.id}}' again</paper-tooltip>
+                                    <paper-tooltip for="verify_{{item.id}}" offset="0">Verify '{{item.name}}' again</paper-tooltip>
                                 </template>
                                 <template is="dom-if" if="[[! item.error]]">
                                     <button id="acc_button_{{item.id}}" class="accountButton" on-click="_Toggle">
