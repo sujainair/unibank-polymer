@@ -20,6 +20,7 @@
 <link rel="import" href="/bower_components/iron-a11y-keys/iron-a11y-keys.html">
 <link rel="import" href="/bower_components/paper-progress/paper-progress.html">
 <link rel="import" href="/bower_components/paper-material/paper-material.html">
+<link rel="import" href="/bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="/src/unibank-app/unibank-accounts.html">
 
 <dom-module id="unibank-app">
@@ -98,14 +99,9 @@
                 </div>
             </paper-material>
         </paper-dialog>
-        <paper-dialog id="msgDialog" always-on-top="true" modal="true">
-            <paper-material elevation="0" style="padding:5px;" main>
-                [[message]]<br>
-                <div align="center" style="padding-top:10px;">
-                    <paper-button raised onclick="msgDialog.close()">OK</paper-button>
-                </div>
-            </paper-material>
-        </paper-dialog>
+        <paper-toast id="msgDialog" duration="0" text="[[message]]">
+            <paper-button raised onclick="msgDialog.close()">OK</paper-button>
+        </paper-toast>
         <paper-dialog id="waitAuth" always-on-top="true">
             <paper-material elevation="0" style="padding:5px;" main>
                 <paper-spinner active></paper-spinner>
@@ -257,6 +253,7 @@
                     }
                     ref.push(_this.$.addAccountForm.ac_name.value)
                         .then(function(){
+                            _this.$.addDialog.close();
                             _this.message = "Details added";
                             _this.$.msgDialog.open();
                             _this.user.getToken(true)
@@ -291,6 +288,8 @@
                             params.push(_this.accAction);
                             _this.$.ajaxMakeTransfer.body = {params};
                             _this.$.ajaxMakeTransfer.generateRequest();
+                            _this.message = "Request has been sent";
+                            _this.$.msgDialog.open();
                         })
                         .catch(function(error) {
                             _this.message = "Error connecting to database. Try again in some time";
@@ -305,6 +304,8 @@
                             .then(function(idToken){
                                 _this.$.ajaxGetBanks.params = { idToken : idToken };
                                 _this.$.ajaxGetBanks.generateRequest();
+                                _this.message = "Request has been sent";
+                                _this.$.msgDialog.open();
                             });
                     })
                     .catch(function(error) {
@@ -326,6 +327,8 @@
                                             .then(function(idToken){
                                                 _this.$.ajaxGetBanks.params = { idToken : idToken };
                                                 _this.$.ajaxGetBanks.generateRequest();
+                                                _this.message = "Request has been sent";
+                                                _this.$.msgDialog.open();
                                             });
                                         });
                             }
