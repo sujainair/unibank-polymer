@@ -26,6 +26,10 @@
 <dom-module id="unibank-app">
     <template>
         <style>
+            paper-icon-button.logo {
+                height:50px;
+                width:50px;
+            }
             paper-material {
                 font-family: "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
                 font-weight: 4;
@@ -65,9 +69,9 @@
                    debounce-duration="300"></iron-ajax>
         <paper-header-panel>
             <paper-toolbar>
-                <paper-icon-button class="logo" src="/img/logo.png" disabled="true"></paper-icon-button>
+                <paper-icon-button class="logo" src="/img/logo.png" onclick="window.location='/index.html?page=home'"></paper-icon-button>
                 <div class="title">Welcome {{user.displayName}}</div>
-                <paper-menu-button class="sm-only" noOverlap="true">
+                <paper-menu-button class="sm-only" no-overlap>
                     <paper-icon-button class="dropdown-trigger" icon="menu"></paper-icon-button>
                     <paper-menu class="dropdown-content" style="overflow:hidden;">
                         <template is="dom-repeat" id="buttonItems1" items="{{buttons}}">
@@ -142,8 +146,8 @@
       	    observer : '_StatusKnownChanged'
       	},
       	buttons : {
-      	    value: [{icon: 'exit-to-app' ,style: 'background-color:red;color:black;' ,name: 'Logout'},
-      	    {icon: 'add-box' ,style: 'background-color:green;color:white;' ,name: 'New Account'} ]
+      	    value: [{icon: 'add-box' ,style: 'background-color:limegreen;color:white;' ,name: 'New Account'},
+      	    {icon: 'exit-to-app' ,style: 'background-color:crimson;color:black;' ,name: 'Logout'}]
       	},
       	accAction : {
       	    type : Object,
