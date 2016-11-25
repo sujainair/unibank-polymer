@@ -218,8 +218,10 @@
                     _this.$.waitAuth.open();
                     path = "/users/" + uid + "/accounts/";
                     key=ref.push().key;
-                    _this.firebaseData={ validity : "invalid",
-                        [key] : account };
+                    var accData = {};
+                    accData["validity"] = "invalid";
+                    accData[key] = account;
+                    _this.firebaseData = accData;
                     _this.$.firebasedoc.save(path,bank)
                         .then(function(){
                             _this.$.ajaxAddBank.params = { bank : bank };
@@ -290,7 +292,7 @@
                         .then(function(idToken){
                             params.push({idToken : idToken});
                             params.push(_this.accAction);
-                            _this.$.ajaxMakeTransfer.body = {params};
+                            _this.$.ajaxMakeTransfer.body = { 'params' : params };
                             _this.$.ajaxMakeTransfer.generateRequest();
                             _this.message = "Request has been sent";
                             _this.$.msgDialog.open();

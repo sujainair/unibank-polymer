@@ -227,7 +227,7 @@
         this.$$('#A' + e.model.item.id).toggle(); //Added A to ensure valid id
       },
       _BankChanged : function(newBank, oldBank){
-        this.$.progress.remove();
+        Polymer.dom(this.root).removeChild(this.$.progress);
       },
       _Transfer : function(e){
         this.userAccountID = e.model.item.name;
