@@ -16,6 +16,7 @@
 <link rel="import" href="/bower_components/paper-item/paper-item.html">
 <link rel="import" href="/bower_components/paper-input/paper-input.html">
 <link rel="import" href="/bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="/bower_components/iron-a11y-keys/iron-a11y-keys.html">
 <link rel="import" href="/src/unibank-app/unibank-home.html">
 <link rel="import" href="/src/unibank-app/unibank-about.html">
 <link rel="import" href="/bower_components/polymerfire/firebase-app.html">
@@ -59,12 +60,12 @@
 				 tail="{{tail}}"></app-route>
 	  <paper-header-panel>
 		  <paper-toolbar>
-			  <paper-icon-button class="logo" src="/img/logo.png"  disabled="true"></paper-icon-button>
+			  <paper-icon-button class="logo" src="/img/logo.png" onclick="window.location='/index.html?page=home'"></paper-icon-button>
 			  <div class="title">UniBank</div>
-			  <paper-menu-button class="sm-only" noOverlap="true">
+			  <paper-menu-button class="sm-only" no-overlap>
 				  <paper-icon-button class="dropdown-trigger" icon="menu"></paper-icon-button>
 				  <paper-menu class="dropdown-content">
-					  <template is="dom-repeat" id="buttonItems1" items="{{buttons}}">
+					  <template is="dom-repeat" id="buttonItems1" items="[[buttons]]">
 					  	<paper-item on-click="_ClickFunction">{{item.name}}</paper-item>
 					  </template>
 				  </paper-menu>
@@ -80,25 +81,27 @@
 	  </iron-pages>
 	  <paper-dialog id="loginDialog">
 		  <form is="iron-form" id="loginForm">
-			  <paper-input name="email" label="Email-ID" required auto-validate error-message="Value required"></paper-input>
+			  <paper-input name="email" label="Email-ID" required auto-validate error-message="Value required" autofocus></paper-input>
 			  <paper-input name="password" label="Password" type="password" required auto-validate error-message="Value required"></paper-input>
 			  <paper-button raised on-click="_LoginAction">Login</paper-button>
-			  <paper-button raised onclick="signupDialog.open()" style="background-color:green;">Sign Up</paper-button>
+			  <iron-a11y-keys id="a11y" keys="enter" on-keys-pressed="_LoginAction"></iron-a11y-keys>
+			  <paper-button raised onclick="signupDialog.open()" style="background-color:limegreen;">Sign Up</paper-button>
 		  </form>
 	  </paper-dialog>
 	  <paper-dialog id="signupDialog">
 		  <form is="iron-form" id="signupForm">
-			  <paper-input id="nameinput" name="name" label="Name" required auto-validate error-message="Alphabets and spaces only" pattern="[a-zA-Z][a-zA-Z ]*" autocapitalize="words"></paper-input>
+			  <paper-input id="nameinput" name="name" label="Name" required auto-validate error-message="Alphabets and spaces only" pattern="[a-zA-Z][a-zA-Z ]*" autocapitalize="words" autofocus></paper-input>
 			  <paper-input name="email" label="Email-ID" required auto-validate error-message="Value required"></paper-input>
 			  <paper-input name="password" label="Password" type="password" required auto-validate error-message="Value required"></paper-input>
-			  <paper-button raised on-click="_SignUp" style="background-color:green;" align="center">Sign Up</paper-button>
+			  <paper-button raised on-click="_SignUp" style="background-color:limegreen;" align="center">Sign Up</paper-button>
+			  <iron-a11y-keys id="a11y" keys="enter" on-keys-pressed="_SignUp"></iron-a11y-keys>
 		  </form>
 	  </paper-dialog>
 	  <firebase-app auth-domain="unibank-11d5b.firebaseapp.com"
 					database-url="https://unibank-11d5b.firebaseio.com"
 					api-key="AIzaSyAyy70wm-UV3SAfrLP92zv5QPSy01MQnQw">
 	  </firebase-app>
-	  <firebase-auth id="auth" user="{{user}}" on-error="_authError">
+	  <firebase-auth id="auth" user="{{user}}" on-error="_authError" status-known="{{statusKnown}}">
 	  </firebase-auth>
 	  <paper-dialog style="background-color:grey;" id="msgDialog">
 		  <paper-material elevation="0" style="padding:5px;" main>
@@ -120,6 +123,10 @@
       		type: Object,
           	observer: '_TailChanged'
       	},
+      	statusKnown : {
+      	    type : Boolean,
+      	    observer : '_StatusKnownChanged'
+      	},
       },
       _authError : function(error){
 	    //done individually. Shows error in console if not defined or used
@@ -130,18 +137,38 @@
       	if (page !== null) {
           if (page === 'about') {
           	this.buttons = [
-          		{icon: 'home' ,style: 'background-color:white;color:black;' ,name: 'Home'},
-          		{icon: 'social:person-add' ,style: 'background-color:green;color:white;' ,name: 'Sign Up'},
-          		{icon: 'verified-user' ,style: 'background-color:white;color:black;' ,name: 'Login'}
+          		{icon: 'verified-user' ,style: 'background-color:white;color:black;' ,name: 'Login'},
+          		{icon: 'social:person-add' ,style: 'background-color:limegreen;color:white;' ,name: 'Sign Up'},
+          		{icon: 'home' ,style: 'background-color:white;color:black;' ,name: 'Home'}
           	];
           }
           else {
           	this.buttons = [
-          		{icon: 'av:library-books' ,style: 'background-color:white;color:black;' ,name: 'About'},
-          		{icon: 'social:person-add' ,style: 'background-color:green;color:white;' ,name: 'Sign Up'},
-          		{icon: 'verified-user' ,style: 'background-color:white;color:black;' ,name: 'Login'}
+          		{icon: 'verified-user' ,style: 'background-color:white;color:black;' ,name: 'Login'},
+          		{icon: 'social:person-add' ,style: 'background-color:limegreen;color:white;' ,name: 'Sign Up'},
+          		{icon: 'av:library-books' ,style: 'background-color:white;color:black;' ,name: 'About'}
           	];
           }
+        }
+      },
+      _StatusKnownChanged : function(statusKnown, oldStatusKnown){
+      	if( statusKnown ){
+      	    if( this.$.auth.signedIn){
+              if (page === 'about') {
+                this.buttons = [
+                    {icon: 'dashboard' ,style: 'background-color:limegreen;color:white;' ,name: 'Dashboard'},
+                    {icon: 'home' ,style: 'background-color:white;color:black;' ,name: 'Home'},
+                    {icon: 'exit-to-app' ,style: 'background-color:crimson;color:black;' ,name: 'Logout'}
+                ];
+              }
+              else {
+                this.buttons = [
+                    {icon: 'dashboard' ,style: 'background-color:limegreen;color:white;' ,name: 'Dashboard'},
+                    {icon: 'av:library-books' ,style: 'background-color:white;color:black;' ,name: 'About'},
+                    {icon: 'exit-to-app' ,style: 'background-color:crimson;color:black;' ,name: 'Logout'}
+                ];
+              }
+            }
         }
       },
       _ClickFunction : function(e) {
@@ -157,6 +184,9 @@
       			break;
       		case 'Login' :
       			this.$.loginDialog.open();
+      			break;
+      		case 'Dashboard' :
+      			window.location="/unibank-loggedin.html";
       			break;
       		default :
       			window.location="#";

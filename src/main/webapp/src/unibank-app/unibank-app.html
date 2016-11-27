@@ -17,13 +17,19 @@
 <link rel="import" href="/bower_components/paper-input/paper-input.html">
 <link rel="import" href="/bower_components/iron-form/iron-form.html">
 <link rel="import" href="/bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="/bower_components/iron-a11y-keys/iron-a11y-keys.html">
 <link rel="import" href="/bower_components/paper-progress/paper-progress.html">
 <link rel="import" href="/bower_components/paper-material/paper-material.html">
+<link rel="import" href="/bower_components/paper-toast/paper-toast.html">
 <link rel="import" href="/src/unibank-app/unibank-accounts.html">
 
 <dom-module id="unibank-app">
     <template>
         <style>
+            paper-icon-button.logo {
+                height:50px;
+                width:50px;
+            }
             paper-material {
                 font-family: "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
                 font-weight: 4;
@@ -63,9 +69,9 @@
                    debounce-duration="300"></iron-ajax>
         <paper-header-panel>
             <paper-toolbar>
-                <paper-icon-button class="logo" src="/img/logo.png" disabled="true"></paper-icon-button>
+                <paper-icon-button class="logo" src="/img/logo.png" onclick="window.location='/index.html?page=home'"></paper-icon-button>
                 <div class="title">Welcome {{user.displayName}}</div>
-                <paper-menu-button class="sm-only" noOverlap="true">
+                <paper-menu-button class="sm-only" no-overlap>
                     <paper-icon-button class="dropdown-trigger" icon="menu"></paper-icon-button>
                     <paper-menu class="dropdown-content" style="overflow:hidden;">
                         <template is="dom-repeat" id="buttonItems1" items="{{buttons}}">
@@ -97,14 +103,9 @@
                 </div>
             </paper-material>
         </paper-dialog>
-        <paper-dialog id="msgDialog" always-on-top="true" modal="true">
-            <paper-material elevation="0" style="padding:5px;" main>
-                [[message]]<br>
-                <div align="center" style="padding-top:10px;">
-                    <paper-button raised onclick="msgDialog.close()">OK</paper-button>
-                </div>
-            </paper-material>
-        </paper-dialog>
+        <paper-toast id="msgDialog" duration="0" text="[[message]]">
+            <paper-button raised onclick="msgDialog.close()">OK</paper-button>
+        </paper-toast>
         <paper-dialog id="waitAuth" always-on-top="true">
             <paper-material elevation="0" style="padding:5px;" main>
                 <paper-spinner active></paper-spinner>
@@ -121,11 +122,12 @@
             <paper-material elevation="0" style="padding:5px;" main>
                 Add new bank account<br>
                 <form is="iron-form" id="addAccountForm">
-                    <paper-input name="bank" label="Bank ID" allowed-pattern="[a-zA-Z0-9_-]" required auto-validate error-message="Value required"></paper-input>
+                    <paper-input name="bank" label="Bank ID" allowed-pattern="[a-zA-Z0-9_-]" required auto-validate error-message="Value required" autofocus></paper-input>
                     <paper-input name="ac_name" label="Account ID" allowed-pattern="[a-zA-Z0-9_-]" required auto-validate error-message="Value required"></paper-input>
                     <div align="center" style="padding-top:10px;">
                         <paper-button raised on-click="_AddAccount" style="background-color:green;color:white"><iron-icon icon="add-box"></iron-icon>ADD</paper-button>
                     </div>
+                    <iron-a11y-keys id="a11y" keys="enter" on-keys-pressed="_AddAccount"></iron-a11y-keys>
                 </form>
             </paper-material>
         </paper-dialog>
@@ -144,8 +146,8 @@
       	    observer : '_StatusKnownChanged'
       	},
       	buttons : {
-      	    value: [{icon: 'exit-to-app' ,style: 'background-color:red;color:black;' ,name: 'Logout'},
-      	    {icon: 'add-box' ,style: 'background-color:green;color:white;' ,name: 'New Account'} ]
+      	    value: [{icon: 'add-box' ,style: 'background-color:limegreen;color:white;' ,name: 'New Account'},
+      	    {icon: 'exit-to-app' ,style: 'background-color:crimson;color:black;' ,name: 'Logout'}]
       	},
       	accAction : {
       	    type : Object,
@@ -153,12 +155,12 @@
       	},
       },
       _TailChanged : function(tail,oldTail){
-      	_this=this;
       	if(this.tail.__queryParams.action === 'addBank'){
             this.$.redirectDialog.open();
       	}
       },
       _StatusKnownChanged : function(statusKnown, oldStatusKnown){
+        _this = this;
         if( statusKnown ){
             if(! this.$.auth.signedIn){
                 this.$.loginFailDialog.open();
@@ -216,8 +218,10 @@
                     _this.$.waitAuth.open();
                     path = "/users/" + uid + "/accounts/";
                     key=ref.push().key;
-                    _this.firebaseData={ validity : "invalid",
-                        [key] : account };
+                    var accData = {};
+                    accData["validity"] = "invalid";
+                    accData[key] = account;
+                    _this.firebaseData = accData;
                     _this.$.firebasedoc.save(path,bank)
                         .then(function(){
                             _this.$.ajaxAddBank.params = { bank : bank };
@@ -255,6 +259,7 @@
                     }
                     ref.push(_this.$.addAccountForm.ac_name.value)
                         .then(function(){
+                            _this.$.addDialog.close();
                             _this.message = "Details added";
                             _this.$.msgDialog.open();
                             _this.user.getToken(true)
@@ -287,8 +292,10 @@
                         .then(function(idToken){
                             params.push({idToken : idToken});
                             params.push(_this.accAction);
-                            _this.$.ajaxMakeTransfer.body = {params};
+                            _this.$.ajaxMakeTransfer.body = { 'params' : params };
                             _this.$.ajaxMakeTransfer.generateRequest();
+                            _this.message = "Request has been sent";
+                            _this.$.msgDialog.open();
                         })
                         .catch(function(error) {
                             _this.message = "Error connecting to database. Try again in some time";
@@ -303,6 +310,8 @@
                             .then(function(idToken){
                                 _this.$.ajaxGetBanks.params = { idToken : idToken };
                                 _this.$.ajaxGetBanks.generateRequest();
+                                _this.message = "Request has been sent";
+                                _this.$.msgDialog.open();
                             });
                     })
                     .catch(function(error) {
@@ -324,6 +333,8 @@
                                             .then(function(idToken){
                                                 _this.$.ajaxGetBanks.params = { idToken : idToken };
                                                 _this.$.ajaxGetBanks.generateRequest();
+                                                _this.message = "Request has been sent";
+                                                _this.$.msgDialog.open();
                                             });
                                         });
                             }
@@ -343,7 +354,7 @@
                 this.firebasePath = "/users/" + uid + "/accounts/" + bank;
                 ref=this.$.firebasedoc.ref;
                 ref.once("child_changed",function(childSnapshot, prevChildKey){
-                        if(childSnapshot.val() === "valid"){
+                        if(childSnapshot.val() === "valid" || childSnapshot.key === "token" ){
                             _this.$.waitAuth.close();
                             _this.user.getToken(true)
                             .then(function(idToken){
@@ -361,6 +372,7 @@
         }
       },
       _TransferDone: function(event){
+        _this = this;
         response = event.detail.response;
         if(response.hasOwnProperty('error')){
             this.message = response.error;

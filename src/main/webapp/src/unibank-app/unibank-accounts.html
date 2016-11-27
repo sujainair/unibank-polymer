@@ -4,6 +4,7 @@
 <link rel="import" href="/bower_components/iron-icon/iron-icon.html">
 <link rel="import" href="/bower_components/iron-collapse/iron-collapse.html">
 <link rel="import" href="/bower_components/paper-progress/paper-progress.html">
+<link rel="import" href="/bower_components/iron-a11y-keys/iron-a11y-keys.html">
 <link rel="import" href="/bower_components/paper-tooltip/paper-tooltip.html">
 
 <dom-module id="unibank-accounts">
@@ -116,7 +117,8 @@
                             <td style="width:92%;border:0px;">
                                 <template is="dom-if" if="{{item.error}}">
                                     <div style="float:left;">{{item.name}}</div>
-                                    <div class="error">{{item.error}}</div>
+                                    <button id="verify_{{item.id}}" on-click="_VerifyAcc" class="error">{{item.error}}</button>
+                                    <paper-tooltip for="verify_{{item.id}}" offset="0">Verify '{{item.name}}' again</paper-tooltip>
                                 </template>
                                 <template is="dom-if" if="[[! item.error]]">
                                     <button id="acc_button_{{item.id}}" class="accountButton" on-click="_Toggle">
@@ -183,9 +185,9 @@
         </template>
         <paper-dialog id="transferDialog">
             <paper-material elevation="0" style="padding:5px;" main>
-                Create a new Transfer<br>
+                Create a new Transfer<br/>
                 <form is="iron-form" id="createTransferForm">
-                    <paper-input name="toBankID" label="Bank ID" required allowed-pattern="[a-zA-Z0-9_-]" auto-validate error-message="Value required"></paper-input>
+                    <paper-input name="toBankID" label="Bank ID" required allowed-pattern="[a-zA-Z0-9_-]" auto-validate error-message="Value required" autofocus></paper-input>
                     <paper-input name="toAccID" label="Account ID" required allowed-pattern="[a-zA-Z0-9_-]" auto-validate error-message="Value required"></paper-input>
                     <paper-input name="trnAmt" label="Amount" required allowed-pattern="[0-9]" auto-validate error-message="Value required"></paper-input>
                     <paper-input name="desc" label="Description"></paper-input>
@@ -193,7 +195,17 @@
                         <paper-button raised on-click="_MakeTransfer" style="background-color:green;color:white">Transfer</paper-button>
                         <paper-button raised onclick="transferDialog.close()" style="background-color:green;color:white">Cancel</paper-button>
                     </div>
+                    <iron-a11y-keys id="a11y" keys="enter" on-keys-pressed="_MakeTransfer"></iron-a11y-keys>
                 </form>
+            </paper-material>
+        </paper-dialog>
+        <paper-dialog id="confirmDialog">
+            <paper-material elevation="0" style="padding:5px;" main>
+                [[confirmation]]<br/>
+                <div align="center" style="padding-top:10px;">
+                    <paper-button raised on-click="_Confirm" style="background-color:green;color:white">Yes</paper-button>
+                    <paper-button raised onclick="confirmDialog.close()" style="background-color:green;color:white">Cancel</paper-button>
+                </div>
             </paper-material>
         </paper-dialog>
     </template>
@@ -215,7 +227,7 @@
         this.$$('#A' + e.model.item.id).toggle(); //Added A to ensure valid id
       },
       _BankChanged : function(newBank, oldBank){
-        this.$.progress.remove();
+        Polymer.dom(this.root).removeChild(this.$.progress);
       },
       _Transfer : function(e){
         this.userAccountID = e.model.item.name;
@@ -236,9 +248,6 @@
         this._setAction(action);
         this.$.transferDialog.close();
       },
-      _setAction : function(action){
-        this.action = action;
-      },
       _CheckTransaction : function(transactions){
         if (transactions !== undefined){
             if(transactions.length === 0 ) {
@@ -252,7 +261,9 @@
             type: "remove bank",
             bank: e.model.item.id,
         };
-        this._setAction(action);
+        this.confirmation = 'Are you sure you want to remove bank ' + action.bank + '?';
+        this.$.confirmDialog.open();
+        this.tmp_action = action;
       },
       _RemoveAccount: function(e){
         action = {
@@ -260,7 +271,9 @@
             bank: e.model.item.id.replace(e.model.item.name + "_",""),
             account: e.model.item.name,
         };
-        this._setAction(action);
+        this.confirmation = 'Are you sure you want to remove account ' + action.account + '?';
+        this.$.confirmDialog.open();
+        this.tmp_action = action;
       },
       _VerifyBank: function(e){
         action = {
@@ -268,6 +281,17 @@
             bank: e.model.item.id,
         };
         this._setAction(action);
+      },
+      _VerifyAcc: function(e){
+        action = {
+            type: "verify bank",
+            bank: e.model.item.id.replace(e.model.item.name + "_",""),
+        }
+        this._setAction(action);
+      },
+      _Confirm : function(){
+        this._setAction(this.tmp_action);
+        this.$.confirmDialog.close();
       },
     });
   </script>
