@@ -153,7 +153,7 @@
 			.then(function(){ window.location.href = '/unibank-loggedin.html' },
 			 function(error){
 				this.message = error.message;
-				this.$.popUps.open('msgBox');
+				this.$.popUps.open('msgBox','login');
 			 }.bind(this));
       },
       /* User signup
@@ -175,14 +175,14 @@
 								window.location.href = '/unibank-loggedin.html';
 							}, function(error) {
 								this.message = error.message;
-								this.$.popUps.open('msgBox');
+								this.$.popUps.open('msgBox','signup');
 							}.bind(this));
 						}
 					}.bind(this));
 			}.bind(this),
 			function(error){
 				this.message = error.message;
-				this.$.popUps.open('msgBox');
+				this.$.popUps.open('msgBox','signup');
 			}.bind(this));
       },
     });
