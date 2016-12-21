@@ -1,0 +1,84 @@
+<!-- The common header panel for unibank. Add iron-icon dependency to host as required -->
+<!-- Import polymer dependencies -->
+<link rel="import" href="/bower_components/polymer/polymer.html">
+<link rel="import" href="/bower_components/paper-header-panel/paper-header-panel.html">
+<link rel="import" href="/bower_components/paper-toolbar/paper-toolbar.html">
+<link rel="import" href="/bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="/bower_components/paper-menu/paper-menu.html">
+<link rel="import" href="/bower_components/paper-menu-button/paper-menu-button.html">
+<link rel="import" href="/bower_components/paper-item/paper-item.html">
+
+<dom-module id="unibank-header">
+    <template>
+        <style>
+            paper-toolbar {
+                --paper-toolbar-title: {
+                    color:black;
+                    font-family: "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
+                    font-weight:bold;
+                };
+                --paper-toolbar-height: 56px;
+            }
+            paper-icon-button.icon {
+                height:50px;
+                width:50px;
+            }
+            @media (max-width: 600px){
+                .bg-only {
+                    display:none;
+                }
+            }
+            @media (min-width:601px){
+                .sm-only{
+                    display:none;
+                }
+            }
+        </style>
+        <paper-header-panel>
+            <paper-toolbar>
+                <paper-icon-button class="icon" src="[[icon]]" on-click="_IconClick"></paper-icon-button>
+                <div class="title"> [[title]]</div>
+                <paper-menu-button class="sm-only" no-overlap>
+                    <paper-icon-button class="dropdown-trigger" icon="menu"></paper-icon-button>
+                    <paper-menu class="dropdown-content">
+                        <template is="dom-repeat" id="buttonItems1" items="[[buttons]]">
+                            <paper-item on-click="_ClickFunction">{{item.name}}</paper-item>
+                        </template>
+                    </paper-menu>
+                </paper-menu-button>
+                <template is="dom-repeat" id="buttonItems2" items="{{buttons}}">
+                    <paper-button class="bg-only" on-click="_ClickFunction" style="{{item.style}}"><iron-icon icon="{{item.icon}}"></iron-icon>{{item.name}}</paper-button>
+                </template>
+            </paper-toolbar>
+        </paper-header-panel>
+    </template>
+    <script>
+        Polymer({
+            is: 'unibank-header',
+            properties: {
+                /* List of buttons to be placed. Contains action which will be notified to the host on click */
+                buttons : Array,
+                /* This notifies the host that a button was clicked. 'header_icon_clicked' notifies that icon was clicked */
+                action : {
+                    Type : String,
+                    readOnly : true,
+                    notify : true,
+                },
+                /* Link to image to be displayed as icon */
+                icon : String,
+                /* text to be displayed as title */
+                title : String,
+            },
+            /* Notify host that one of the buttons was clicked */
+            _ClickFunction : function(e) {
+                this._setAction(e.model.item.action);
+                this._setAction('');        //reset for next event
+            },
+            /* Notify host that the icon button was clicked */
+            _IconClick : function(e){
+                this._setAction('header_icon_clicked');
+                this._setAction('');        //reset for next event
+            },
+        });
+    </script>
+</dom-module>

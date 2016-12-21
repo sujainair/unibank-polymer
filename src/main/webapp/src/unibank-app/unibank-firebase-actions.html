@@ -1,0 +1,130 @@
+<!-- unibank element that performs all firebase database operations for the app -->
+<!-- Import polymer dependencies -->
+<link rel="import" href="/bower_components/polymer/polymer.html">
+<link rel="import" href="/bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="/bower_components/polymerfire/firebase-document.html">
+<!-- Import unibank dependencies -->
+<link rel="import" href="/src/unibank-app/unibank-pop-ups.html">
+<link rel="import" href="/src/unibank-app/unibank-ajax.html">
+
+<dom-module id="unibank-firebase-actions">
+    <template>
+        <firebase-auth id="auth" user="{{user}}">
+        </firebase-auth>
+        <firebase-document id="firebasedoc"
+                           path="{{firebasePath}}"
+                           data="{{firebaseData}}">
+        </firebase-document>
+        <unibank-pop-ups id="popUps" message="[[message]]"></unibank-pop-ups>
+        <unibank-ajax id="ajax"></unibank-ajax>
+    </template>
+    <script>
+        Polymer({
+            is: 'unibank-firebase-actions',
+            /* Add a new account for the user
+                @param {String} bank is the bank ID corresponding to the account
+                @param {String} account is the account ID corresponding to the account
+                no retun value. Generates appropriate message for the user in pop-up dialog
+            */
+            addAccount : function(bank, account){
+                return new Promise(function(resolve,reject){
+                    uid = this.user.uid;
+                    this.firebasePath = "/users/" + uid + "/accounts/" + bank;
+                    ref=this.$.firebasedoc.ref;
+                    ref.once('value')                                                       //get existing accounts added under the bank
+                        .then(function(accounts){
+                            if(!accounts.val()){                                            //If the bank is new, then no value is found
+                                path = "/users/" + uid + "/accounts/";                      //So add the new bank and ask user to authenticate with login
+                                key=ref.push().key;
+                                var accData = {};
+                                accData["validity"] = "invalid";
+                                accData[key] = account;
+                                this.firebaseData = accData;
+                                this.$.firebasedoc.save(path,bank)
+                                    .then(function(){
+                                        this.$.popUps.open('bankAuth');
+                                        this.$.ajax.addBank(bank);             //This will open a pop-up window for authentication with the openbankapi sandbox
+                                    }.bind(this));
+                                this.checkAuth(bank)
+                                    .then(function(){
+                                        this.$.popUps.close('bankAuth');
+                                        resolve();
+                                    }.bind(this));                                     //Close the waitAuth pop-up when success and return the promise
+                            }
+                            else {                                                          //User has already authenticated the bank and only add the new account
+                                keys = Object.keys(accounts.val())
+                                for(i=0; i<keys.length; i++){
+                                    if (accounts.val()[keys[i]] === account){               //Check if account is already added. To avoid duplicate entry by the user
+                                       reject(new Error("Account already exists"));
+                                    }
+                                    else if(keys[i] === "validity" && accounts.val()[keys[i]] !== "valid" ){    //Don't add more accounts to the database if you can't connect to the bank
+                                        reject(new Error("Authenticate with the bank first!"));
+                                    }
+                                }
+                                ref.push(account)                  //Add the new account to database and refresh the view
+                                    .then(function(){
+                                        resolve();
+                                    });
+                            }
+                        }.bind(this));
+                }.bind(this));
+            },
+            /* Close waitAuth pop-up when bank is authenticated
+                @param {String} bank which needs to be checked
+            */
+            checkAuth : function(bank) {
+                return new Promise(function(resolve,reject){
+                    uid = this.user.uid;
+                    this.firebasePath = null;              //Reset firebase path to avoid ref is null
+                    this.firebasePath = "/users/" + uid + "/accounts/" + bank;
+                    ref = this.$.firebasedoc.ref;
+                    ref.once("child_changed",function(childSnapshot, prevChildKey){
+                            if(childSnapshot.val() === "valid" || childSnapshot.key === "token" ){          //On successful authentication with the bank, the value should change to 'valid' or new token is set
+                                resolve();
+                            }
+                        });
+                }.bind(this));
+            },
+            /* Remove the bank from users database
+                @param {String} bank-ID which needs to be removed
+            */
+            removeBank : function(bank){
+                return new Promise(function(resolve, reject){
+                    this.firebasePath = "/users/" + this.user.uid + "/accounts/" + bank;
+                    this.$.firebasedoc.ref.remove()
+                        .then(function(){
+                            resolve();
+                        })
+                        .catch(function(error) {
+                            reject(error);
+                        });
+                }.bind(this));
+            },
+            /* Remove the account from users database
+                @param {String} bank-ID which the account belongs to
+                @param {String} account-ID whihc needs to be removed
+            */
+            removeAccount : function(bank, account){
+                return new Promise(function(resolve, reject){
+                    this.firebasePath = "/users/" + this.user.uid + "/accounts/" + bank;
+                    ref = this.$.firebasedoc.ref;
+                    ref.once('value')
+                        .then(function(accounts){
+                            keys = Object.keys(accounts.val());
+                            for(i=0; i<keys.length; i++){
+                                if(accounts.val()[keys[i]] === account){
+                                    ref.child(keys[i]).remove()
+                                        .then(function(){
+                                            resolve();
+                                        });
+                                }
+                            }
+                        }.bind(this))
+                        .catch(function(error) {
+                            reject();
+                        });
+                }.bind(this));
+            },
+        });
+    </script>
+</dom-module>

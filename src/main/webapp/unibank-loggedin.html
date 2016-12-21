@@ -1,5 +1,5 @@
 <!doctype html>
-
+<!-- Open the main application dashboard when user is logged in -->
 <html>
 <head>
 	<title>OpenBank Demo</title>
@@ -7,9 +7,18 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<link rel="manifest" href="/manifest.json">
 	<script src="/bower_components/webcomponentsjs/webcomponents-lite.js"></script>
+	<!-- Import polymer dependencies -->
+	<link rel="import" href="/bower_components/polymerfire/firebase-app.html">
+	<!-- Import unibank-app -->
 	<link rel="import" href="/src/unibank-app/unibank-app.html">
 </head>
 <body>
+	<!-- The application's firebase application initialization -->
+	<firebase-app auth-domain="unibank-11d5b.firebaseapp.com"
+				  database-url="https://unibank-11d5b.firebaseio.com"
+				  api-key="AIzaSyAyy70wm-UV3SAfrLP92zv5QPSy01MQnQw">
+	</firebase-app>
+	<!-- application dashboard view -->
 	<unibank-app></unibank-app>
 </body>
 </html>

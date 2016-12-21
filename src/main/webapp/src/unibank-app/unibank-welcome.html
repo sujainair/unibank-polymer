@@ -1,239 +1,190 @@
+<!-- Import polymer dependencies -->
 <link rel="import" href="/bower_components/polymer/polymer.html">
-<link rel="import" href="/bower_components/paper-header-panel/paper-header-panel.html">
 <link rel="import" href="/bower_components/app-route/app-location.html">
 <link rel="import" href="/bower_components/app-route/app-route.html">
 <link rel="import" href="/bower_components/iron-pages/iron-pages.html">
-<link rel="import" href="/bower_components/paper-toolbar/paper-toolbar.html">
-<link rel="import" href="/bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="/bower_components/polymerfire/firebase-auth.html">
+<!-- iron-icons required by header panel -->
 <link rel="import" href="/bower_components/iron-icons/iron-icons.html">
-<link rel="import" href="/bower_components/iron-form/iron-form.html">
-<link rel="import" href="/bower_components/iron-icons/av-icons.html">
 <link rel="import" href="/bower_components/iron-icons/social-icons.html">
-<link rel="import" href="/bower_components/paper-button/paper-button.html">
-<link rel="import" href="/bower_components/paper-material/paper-material.html">
-<link rel="import" href="/bower_components/paper-menu/paper-menu.html">
-<link rel="import" href="/bower_components/paper-menu-button/paper-menu-button.html">
-<link rel="import" href="/bower_components/paper-item/paper-item.html">
-<link rel="import" href="/bower_components/paper-input/paper-input.html">
-<link rel="import" href="/bower_components/paper-dialog/paper-dialog.html">
-<link rel="import" href="/bower_components/iron-a11y-keys/iron-a11y-keys.html">
+<!-- Import unibank dependencies -->
+<link rel="import" href="/src/unibank-app/unibank-header.html">
 <link rel="import" href="/src/unibank-app/unibank-home.html">
 <link rel="import" href="/src/unibank-app/unibank-about.html">
-<link rel="import" href="/bower_components/polymerfire/firebase-app.html">
-<link rel="import" href="/bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="/src/unibank-app/unibank-pop-ups.html">
+<!-- Import unibank style dependencies -->
+<link rel="import" href="/src/unibank-styles/unibank-style-defaults.html"/>
 
 <dom-module id="unibank-welcome">
   <template>
-    <style>
-		paper-icon-button.logo {
-			height:50px;
-			width:50px;
-		}
-		paper-toolbar {
-			--paper-toolbar-title: {
-				color:black;
-				font-family: "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
-				font-weight:bold;
-			};
-			--paper-toolbar-height: 56px;
-		}
-		paper-material {
-			font-family: "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
-			font-weight: 4;
-		}
-		paper-material p {
-			line-height:5px;
-		}			
-		@media (max-width: 600px){
-			.bg-only {
-				display:none;
-			}
-		}
-		@media (min-width:601px){
-			.sm-only{
-				display:none;
-			}
-		}
-    </style>
+	  <firebase-auth id="auth" user="{{user}}" status-known="{{statusKnown}}">
+	  </firebase-auth>
 	  <app-location route="{{route}}"></app-location>
 	  <app-route route="{{route}}"
 				 tail="{{tail}}"></app-route>
-	  <paper-header-panel>
-		  <paper-toolbar>
-			  <paper-icon-button class="logo" src="/img/logo.png" onclick="window.location='/index.html?page=home'"></paper-icon-button>
-			  <div class="title">UniBank</div>
-			  <paper-menu-button class="sm-only" no-overlap>
-				  <paper-icon-button class="dropdown-trigger" icon="menu"></paper-icon-button>
-				  <paper-menu class="dropdown-content">
-					  <template is="dom-repeat" id="buttonItems1" items="[[buttons]]">
-					  	<paper-item on-click="_ClickFunction">{{item.name}}</paper-item>
-					  </template>
-				  </paper-menu>
-			  </paper-menu-button>
-			  <template is="dom-repeat" id="buttonItems2" items="{{buttons}}">
-				  <paper-button class="bg-only" on-click="_ClickFunction" style="{{item.style}}"><iron-icon icon="{{item.icon}}"></iron-icon>{{item.name}}</paper-button>
-			  </template>
-		  </paper-toolbar>
-	  </paper-header-panel>
+      <unibank-header id="header" buttons="[[buttons]]" action="{{headerAction}}"
+	  icon="/img/logo.png" title="Welcome to Unibank" ></unibank-header>
 	  <iron-pages selected="[[page]]" attr-for-selected="name" selected-attribute="visible" fallback-selection="home">
 			<unibank-home name="home"></unibank-home>
 		  	<unibank-about name="about"></unibank-about>
 	  </iron-pages>
-	  <paper-dialog id="loginDialog">
-		  <form is="iron-form" id="loginForm">
-			  <paper-input name="email" label="Email-ID" required auto-validate error-message="Value required" autofocus></paper-input>
-			  <paper-input name="password" label="Password" type="password" required auto-validate error-message="Value required"></paper-input>
-			  <paper-button raised on-click="_LoginAction">Login</paper-button>
-			  <iron-a11y-keys id="a11y" keys="enter" on-keys-pressed="_LoginAction"></iron-a11y-keys>
-			  <paper-button raised onclick="signupDialog.open()" style="background-color:limegreen;">Sign Up</paper-button>
-		  </form>
-	  </paper-dialog>
-	  <paper-dialog id="signupDialog">
-		  <form is="iron-form" id="signupForm">
-			  <paper-input id="nameinput" name="name" label="Name" required auto-validate error-message="Alphabets and spaces only" pattern="[a-zA-Z][a-zA-Z ]*" autocapitalize="words" autofocus></paper-input>
-			  <paper-input name="email" label="Email-ID" required auto-validate error-message="Value required"></paper-input>
-			  <paper-input name="password" label="Password" type="password" required auto-validate error-message="Value required"></paper-input>
-			  <paper-button raised on-click="_SignUp" style="background-color:limegreen;" align="center">Sign Up</paper-button>
-			  <iron-a11y-keys id="a11y" keys="enter" on-keys-pressed="_SignUp"></iron-a11y-keys>
-		  </form>
-	  </paper-dialog>
-	  <firebase-app auth-domain="unibank-11d5b.firebaseapp.com"
-					database-url="https://unibank-11d5b.firebaseio.com"
-					api-key="AIzaSyAyy70wm-UV3SAfrLP92zv5QPSy01MQnQw">
-	  </firebase-app>
-	  <firebase-auth id="auth" user="{{user}}" on-error="_authError" status-known="{{statusKnown}}">
-	  </firebase-auth>
-	  <paper-dialog style="background-color:grey;" id="msgDialog">
-		  <paper-material elevation="0" style="padding:5px;" main>
-			  [[message]]<br>
-			  <div align="center" style="padding-top:10px;">
-				  <paper-button raised onclick="msgDialog.close()" style="background-color:white;">OK</paper-button>
-			  </div>
-		  </paper-material>
-	  </paper-dialog>
+	  <unibank-pop-ups id="popUps" action="{{popUpAction}}" message="[[message]]"></unibank-pop-ups>
   </template>
-
   <script>
     Polymer({
       is: 'unibank-welcome',
       properties : {
-      	message : String,
+      	/* Page variable used to select iron-page */
       	page: String,
+      	/* Gets query params in the url */
       	tail : {
       		type: Object,
           	observer: '_TailChanged'
       	},
+      	/* To check if firebase login status is known */
       	statusKnown : {
       	    type : Boolean,
       	    observer : '_StatusKnownChanged'
       	},
+      	/* Action received from unibank header panel button click.
+      	 	Is the action element in the buttons Array Object
+      	 */
+      	headerAction : {
+      		type : String,
+      		observer : '_HeaderActionChanged',
+      	},
+      	/* Action received from pop-up
+      	 	Check unibank-pop-ups.html to find out what is contained in this Object.
+      	 */
+      	popUpAction: {
+      		type: Object,
+      		observer : '_PopUpActionChanged',
+      	},
       },
-      _authError : function(error){
-	    //done individually. Shows error in console if not defined or used
-	  },
+      /* Checks for query params */
       _TailChanged : function(tail,oldTail){
       	this.page=tail.__queryParams.page;
       	page=this.page;
       	if (page !== null) {
           if (page === 'about') {
           	this.buttons = [
-          		{icon: 'verified-user' ,style: 'background-color:white;color:black;' ,name: 'Login'},
-          		{icon: 'social:person-add' ,style: 'background-color:limegreen;color:white;' ,name: 'Sign Up'},
-          		{icon: 'home' ,style: 'background-color:white;color:black;' ,name: 'Home'}
+          		{icon: 'verified-user' ,style: 'background-color:white;color:black;' ,name: 'Login', action: 'login'},
+          		{icon: 'social:person-add' ,style: 'background-color:limegreen;color:white;' ,name: 'Sign Up',action: 'signup'},
+          		{icon: 'home' ,style: 'background-color:white;color:black;' ,name: 'Home',action: 'home'}
           	];
           }
           else {
           	this.buttons = [
-          		{icon: 'verified-user' ,style: 'background-color:white;color:black;' ,name: 'Login'},
-          		{icon: 'social:person-add' ,style: 'background-color:limegreen;color:white;' ,name: 'Sign Up'},
-          		{icon: 'av:library-books' ,style: 'background-color:white;color:black;' ,name: 'About'}
+          		{icon: 'verified-user' ,style: 'background-color:white;color:black;' ,name: 'Login', action: 'login'},
+          		{icon: 'social:person-add' ,style: 'background-color:limegreen;color:white;' ,name: 'Sign Up',action: 'signup'},
+          		{icon: 'av:library-books' ,style: 'background-color:white;color:black;' ,name: 'About', action: 'about'}
           	];
           }
         }
       },
+      /* Checks if user is signed in */
       _StatusKnownChanged : function(statusKnown, oldStatusKnown){
       	if( statusKnown ){
+      		/* Show dashboard link instead of login when user is already signed-in */
       	    if( this.$.auth.signedIn){
               if (page === 'about') {
                 this.buttons = [
-                    {icon: 'dashboard' ,style: 'background-color:limegreen;color:white;' ,name: 'Dashboard'},
-                    {icon: 'home' ,style: 'background-color:white;color:black;' ,name: 'Home'},
-                    {icon: 'exit-to-app' ,style: 'background-color:crimson;color:black;' ,name: 'Logout'}
+                    {icon: 'dashboard' ,style: 'background-color:limegreen;color:white;' ,name: 'Dashboard', action: 'dashboard'},
+                    {icon: 'home' ,style: 'background-color:white;color:black;' ,name: 'Home',action: 'home'},
+                    {icon: 'exit-to-app' ,style: 'background-color:crimson;color:black;' ,name: 'Logout',action: 'logout'}
                 ];
               }
               else {
                 this.buttons = [
-                    {icon: 'dashboard' ,style: 'background-color:limegreen;color:white;' ,name: 'Dashboard'},
-                    {icon: 'av:library-books' ,style: 'background-color:white;color:black;' ,name: 'About'},
-                    {icon: 'exit-to-app' ,style: 'background-color:crimson;color:black;' ,name: 'Logout'}
+                    {icon: 'dashboard' ,style: 'background-color:limegreen;color:white;' ,name: 'Dashboard',action: 'dashboard'},
+                    {icon: 'av:library-books' ,style: 'background-color:white;color:black;' ,name: 'About',action: 'about'},
+                    {icon: 'exit-to-app' ,style: 'background-color:crimson;color:black;' ,name: 'Logout',action: 'logout'}
                 ];
               }
             }
         }
       },
-      _ClickFunction : function(e) {
-      	switch(e.model.item.name){
-      		case 'About' :
-      			window.location="/index.html?page=about";
+      /* Perform action when button clicked in header panel */
+      _HeaderActionChanged : function(action, oldAction){
+    		switch(action){
+    			case 'about' :
+    				window.location="/index.html?page=about";
+    				break;
+    			case 'home' :
+    				window.location="/index.html?page=home";
+    				break;
+    			case 'signup' :
+    				this.$.popUps.open('signup','signup');
+    				break;
+    			case 'login' :
+    				this.$.popUps.open('login','login');
+    				break;
+    			case 'dashboard' :
+    				window.location="/unibank-loggedin.html";
+    				break;
+    			case 'logout' :
+    				this.$.auth.signOut();
+          			window.location = '/index.html';
+          			break;
+          		case 'header_icon_clicked' :
+          			window.location = '/index.html';
+          			break;
+    			default :
+    			   window.location="#";
+    		}
+      },
+      /* Perform action when button clicked in pop-up */
+      _PopUpActionChanged : function(action, oldAction){
+      	switch(action.name){
+      		case 'signup' :
+      			this._SignUp(action.values.email, action.values.password, action.values.name);
       			break;
-      		case 'Home' :
-      			window.location="/index.html?page=home";
+      		case 'login' :
+      			this._Login(action.values.email, action.values.password);
       			break;
-      		case 'Sign Up' :
-      			this.$.signupDialog.open();
-      			break;
-      		case 'Login' :
-      			this.$.loginDialog.open();
-      			break;
-      		case 'Dashboard' :
-      			window.location="/unibank-loggedin.html";
-      			break;
-      		default :
-      			window.location="#";
       	}
       },
-	  _SignUp : function(){
-	  	_this = this;
-	  	email = this.$.signupForm.email.value;
-	  	password = this.$.signupForm.password.value;
-	  	name = this.$.signupForm.name.value;
-	  	if(this.$.nameinput.invalid) {
-	  		this.message = "Try a valid name";
-	  		this.$.msgDialog.open();
-	  		return;
-	  	}
-	  	this.$.auth.createUserWithEmailAndPassword(email, password)
-	  		.then(function(){
-	  			_this.$.auth.signInWithEmailAndPassword(email,password)
-                    //Should be signed in after signup but did not work that way
+      /* User login
+      		@param {String} email
+      		@param {String} password
+      */
+      _Login : function(email, password){
+		this.$.auth.signInWithEmailAndPassword(email, password)
+			.then(function(){ window.location.href = '/unibank-loggedin.html' },
+			 function(error){
+				this.message = error.message;
+				this.$.popUps.open('msgBox');
+			 }.bind(this));
+      },
+      /* User signup
+      		@param {String} email
+      		@param {String} password
+      		@param {String} name (users name)
+      */
+      _SignUp : function(email, password, name){
+		this.$.auth.createUserWithEmailAndPassword(email, password)
+			.then(function(){
+				this.$.auth.signInWithEmailAndPassword(email,password)
+					//Should be signed in after signup but did not work that way
 					.then( function(){
-						var user = _this.user;
+						var user = this.user;
 						if(user != null) {
 							user.updateProfile({
-							  displayName: name
+							  displayName: name                     //Add name to users profile
 							}).then(function() {
 								window.location.href = '/unibank-loggedin.html';
 							}, function(error) {
-								_this.message = error.message;
-								_this.$.msgDialog.open();
-							});
+								this.message = error.message;
+								this.$.popUps.open('msgBox');
+							}.bind(this));
 						}
-					});
-	  		},
-	  		function(error){
-	  			_this.message = error.message;
-				_this.$.msgDialog.open();
-	  		});
-	  },
-	  _LoginAction : function(){
-	  	_this = this;
-	  	this.$.auth.signInWithEmailAndPassword(this.$.loginForm.email.value, this.$.loginForm.password.value)
-	  		.then(function(){ window.location.href = '/unibank-loggedin.html' },
-	  		 function(error){
-				_this.message = error.message;
-				_this.$.msgDialog.open();
-	  		 });
-	  },
+					}.bind(this));
+			}.bind(this),
+			function(error){
+				this.message = error.message;
+				this.$.popUps.open('msgBox');
+			}.bind(this));
+      },
     });
   </script>
 </dom-module>

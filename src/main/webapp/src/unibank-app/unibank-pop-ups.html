@@ -1,0 +1,203 @@
+<!-- All the dialogs that are used by unibank. Make sure you update the popUpIds Array when you add a new dialog here -->
+<!-- Import polymer dependencies -->
+<link rel="import" href="/bower_components/polymer/polymer.html">
+<link rel="import" href="/bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="/bower_components/paper-material/paper-material.html">
+<link rel="import" href="/bower_components/paper-toast/paper-toast.html">
+<link rel="import" href="/bower_components/paper-button/paper-button.html">
+<link rel="import" href="/bower_components/iron-a11y-keys/iron-a11y-keys.html">
+<link rel="import" href="/bower_components/iron-form/iron-form.html">
+<link rel="import" href="/bower_components/paper-input/paper-input.html">
+<link rel="import" href="/bower_components/paper-spinner/paper-spinner.html">
+<link rel="import" href="/bower_components/polymerfire/firebase-auth.html">
+<!-- Import unibank style dependencies -->
+<link rel="import" href="/src/unibank-styles/unibank-style-defaults.html">
+
+<dom-module id="unibank-pop-ups">
+    <template>
+        <style include="unibank-style-defaults"></style>
+        <firebase-auth id="auth" user="{{user}}">
+        </firebase-auth>
+        <!-- Block user when not logged in -->
+        <paper-dialog style="background-color:grey;" id="loginFailed" always-on-top="true" modal="true">
+            <paper-material elevation="0" style="padding:5px;" main>
+                Login required to view this page<br>
+                <div align="center" style="padding-top:10px;">
+                    <paper-button raised onclick="window.location='/index.html'" style="background-color:white;">OK</paper-button>
+                    <iron-a11y-keys id="a11y" keys="enter" on-keys-pressed="_OpenIndex"></iron-a11y-keys>
+                </div>
+            </paper-material>
+        </paper-dialog>
+        <!-- Show dialog to inform user to authenticate with the bank and to allow pop-up -->
+        <paper-dialog id="bankAuth" always-on-top="true">
+            <paper-material elevation="0" style="padding:5px;" main>
+                <paper-spinner active></paper-spinner>
+                Please authenticate with the bank on pop-up window! Allow pop-ups if blocked...
+            </paper-material>
+        </paper-dialog>
+        <!-- Show dialog while page is redirecting for auth -->
+        <paper-dialog id="redirect" always-on-top="true" modal="true">
+            <paper-material elevation="0" style="padding:5px;" main>
+                <paper-progress indeterminate style="width:98%"></paper-progress>
+                You will be redirected to your bank to authenticate.
+            </paper-material>
+        </paper-dialog>
+        <!-- A paper toast to display generic messages to user. Usually to confirm action being performed by application -->
+        <paper-toast id="msgBox" duration="0" text="[[message]]">
+            <paper-button raised on-click="_CloseMsgBox">OK</paper-button>
+        </paper-toast>
+        <!-- User login form -->
+        <paper-dialog id="login">
+            <form is="iron-form" id="loginForm">
+                <paper-input name="email" label="Email-ID" required auto-validate error-message="Value required" autofocus></paper-input>
+                <paper-input name="password" label="Password" type="password" required auto-validate error-message="Value required"></paper-input>
+                <paper-button raised on-click="_LoginAction">Login</paper-button>
+                <iron-a11y-keys id="a11y" keys="enter" on-keys-pressed="_LoginAction"></iron-a11y-keys>
+                <paper-button raised on-click="_OpenSignUp" style="background-color:limegreen;">Sign Up</paper-button>
+            </form>
+        </paper-dialog>
+        <!-- User sign-up form -->
+        <paper-dialog id="signup">
+            <form is="iron-form" id="signupForm">
+                <paper-input id="nameinput" name="name" label="Name" required auto-validate error-message="Alphabets and spaces only" pattern="[a-zA-Z][a-zA-Z ]*" autocapitalize="words" autofocus></paper-input>
+                <paper-input name="email" label="Email-ID" required auto-validate error-message="Value required"></paper-input>
+                <paper-input name="password" label="Password" type="password" required auto-validate error-message="Value required"></paper-input>
+                <paper-button raised on-click="_SignUp" style="background-color:limegreen;" align="center">Sign Up</paper-button>
+                <iron-a11y-keys id="a11y" keys="enter" on-keys-pressed="_SignUp"></iron-a11y-keys>
+            </form>
+        </paper-dialog>
+        <!-- Add new account form -->
+        <paper-dialog id="addAccount">
+            <paper-material elevation="0" style="padding:5px;" main>
+                Add new bank account<br>
+                <form is="iron-form" id="addAccountForm">
+                    <paper-input name="bank" label="Bank ID" allowed-pattern="[a-zA-Z0-9_-]" required auto-validate error-message="Value required" autofocus></paper-input>
+                    <paper-input name="ac_name" label="Account ID" allowed-pattern="[a-zA-Z0-9_-]" required auto-validate error-message="Value required"></paper-input>
+                    <div align="center" style="padding-top:10px;">
+                        <paper-button raised on-click="_AddAccount" style="background-color:green;color:white"><iron-icon icon="add-box"></iron-icon>ADD</paper-button>
+                    </div>
+                    <iron-a11y-keys id="a11y" keys="enter" on-keys-pressed="_AddAccount"></iron-a11y-keys>
+                </form>
+            </paper-material>
+        </paper-dialog>
+        <!-- Transfer money form -->
+        <paper-dialog id="transfer">
+            <paper-material elevation="0" style="padding:5px;" main>
+                Create a new Transfer<br/>
+                <form is="iron-form" id="createTransferForm">
+                    <paper-input name="toBankID" label="Bank ID" required allowed-pattern="[a-zA-Z0-9_-]" auto-validate error-message="Value required" autofocus></paper-input>
+                    <paper-input name="toAccID" label="Account ID" required allowed-pattern="[a-zA-Z0-9_-]" auto-validate error-message="Value required"></paper-input>
+                    <paper-input name="trnAmt" label="Amount" required allowed-pattern="[0-9]" auto-validate error-message="Value required"></paper-input>
+                    <paper-input name="desc" label="Description"></paper-input>
+                    <div align="center" style="padding-top:10px;">
+                        <paper-button raised on-click="_MakeTransfer" style="background-color:green;color:white">Transfer</paper-button>
+                        <paper-button raised on-click="_CloseTransfer" style="background-color:green;color:white">Cancel</paper-button>
+                    </div>
+                    <iron-a11y-keys id="a11y" keys="enter" on-keys-pressed="_MakeTransfer"></iron-a11y-keys>
+                </form>
+            </paper-material>
+        </paper-dialog>
+    </template>
+    <script>
+        Polymer({
+            is: 'unibank-pop-ups',
+            properties : {
+                message : String,                               //This is set by the host to before msgBox is displayed
+                popUpIds : {                                    //List of all the types of dialog box IDs used below to make sure it exists.
+                    readOnly : true,
+                    type : Array,
+                    value : [ "bankAuth" , "msgBox", "login", "signup", "loginFailed", "addAccount", "transfer" ],
+                },
+                /* To notify action on a pop-up if required
+                    the Object contains fields
+                    name : <String> this is passed with the open command
+                    values : <Object> values as { <field> : <value>, <field> : <value> } as required for the action
+                */
+                action : {
+                    readOnly : true,
+                    type: Object,
+                    notify: true,
+                },
+            },
+            /* Open a pop-up dialog
+                @param {String} id is the ID of the pop-up dialog. Should be added to popUpIds array
+            */
+            open : function(id, action){
+                this.actionToReturn = action;
+                if ( this.popUpIds.indexOf(id) > -1 )
+                    this.$$('#' + id).open();
+                else
+                    console.log('Error : pop-up with id "' + id + '" not created!');
+            },
+            /* Close a pop-up dialog
+                @param {String} id is the ID of the pop-up dialog. Should be added to popUpIds
+            */
+            close : function(id){
+                if ( this.popUpIds.indexOf(id) > -1 )
+                    this.$$('#' + id).close();
+                else
+                    console.log('Error : pop-up with id "' + id + '" not created!');
+            },
+            /* Notify host to signup new user */
+            _SignUp : function(){
+                if(this.$.nameinput.invalid) {
+                    this.message = "Try a valid name";
+                    this.$.msgBox.open();
+                    return;
+                }
+                var action = {};
+                action.name = this.actionToReturn;
+                action.values = { email : this.$.signupForm.email.value,
+                    password : this.$.signupForm.password.value,
+                    name : this.$.signupForm.name.value};
+                this._setAction(action);
+                this._setAction({});        //reset for next event
+            },
+            /* Notify host to login the user */
+            _LoginAction : function(){
+                var action = {};
+                action.name = this.actionToReturn;
+                action.values = { email : this.$.loginForm.email.value,
+                    password : this.$.loginForm.password.value };
+                this._setAction(action);
+                this._setAction({});        //reset for next event
+            },
+            /* Open index page. */
+            _OpenIndex : function(){
+                window.location = '/index.html';
+            },
+            /* Notify host to add new account for the user. */
+            _AddAccount : function(){
+                var action = {};
+                action.name = this.actionToReturn;
+                action.values = { bank : this.$.addAccountForm.bank.value,
+                    account : this.$.addAccountForm.ac_name.value };
+                this._setAction(action);
+                this._setAction({});        //reset for next event
+            },
+            /* Notify host to create a transfer request for user */
+            _MakeTransfer : function(){
+                var action = {};
+                action.name = this.actionToReturn;
+                action.values = { to_bank : this.$.createTransferForm.toBankID.value,
+                    to_acc : this.$.createTransferForm.toAccID.value,
+                    amount : this.$.createTransferForm.trnAmt.value,
+                    description : this.$.createTransferForm.desc.value };
+                this._setAction(action);
+                this._setAction({});        //reset for next event
+            },
+            /* Close msgBox on click */
+            _CloseMsgBox : function(){
+                this.close('msgBox');
+            },
+            /* Open sign-up pop-up form */
+            _OpenSignUp : function(){
+                this.open('signup','signup');
+            },
+            /* Close transfer pop-up */
+            _CloseTransfer : function(){
+                this.close('transfer');
+            },
+        });
+    </script>
+</dom-module>

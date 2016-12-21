@@ -1,95 +1,29 @@
+<!-- Import polymer dependencies -->
 <link rel="import" href="/bower_components/polymer/polymer.html">
-<link rel="import" href="/bower_components/polymerfire/firebase-document.html">
 <link rel="import" href="/bower_components/paper-material/paper-material.html">
 <link rel="import" href="/bower_components/iron-icon/iron-icon.html">
 <link rel="import" href="/bower_components/iron-collapse/iron-collapse.html">
 <link rel="import" href="/bower_components/paper-progress/paper-progress.html">
 <link rel="import" href="/bower_components/iron-a11y-keys/iron-a11y-keys.html">
 <link rel="import" href="/bower_components/paper-tooltip/paper-tooltip.html">
+<!-- Import unibank dependencies -->
+<link rel="import" href="/src/unibank-app/unibank-ajax.html">
+<link rel="import" href="/src/unibank-app/unibank-pop-ups.html">
+<link rel="import" href="/src/unibank-app/unibank-firebase-actions.html">
+<!-- Import unibank style dependencies -->
+<link rel="import" href="/src/unibank-styles/unibank-style-defaults.html"/>
+<link rel="import" href="/src/unibank-styles/unibank-style-accounts.html"/>
 
 <dom-module id="unibank-accounts">
-    <style>
-        paper-material {
-            font-family: "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
-        }
-        .progress {
-            position: absolute;
-            width: 98%;
-            top: 50%;
-            padding:5px;
-            text-align:center;
-            font-size:larger;
-        }
-        .error {
-            float:right;
-            color:red;
-            font-size:x-small;
-            cursor: pointer;
-            background-color : white;
-            border: 0px;
-            padding-top:10px;
-        }
-        .bank {
-            padding-left: 1%;
-            padding-right: 1%;
-            font-size: larger;
-        }
-        .bankButton {
-            cursor: pointer;
-            background-color : white;
-            border: 0px;
-            float: right;
-        }
-        .accountDiv {
-            width : 100%;
-            padding-left: 2%;
-            padding-right: 2%;
-        }
-        .accountButton {
-            font-family: "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
-            width : 100%;
-            background-color : white;
-            cursor: pointer;
-            border-width: thin;
-            font-size: medium;
-        }
-        .iconButton {
-            cursor: pointer;
-            background-color : white;
-            border: 0px;
-        }
-        .transaction {
-            width : 90%;
-            background-color : white;
-            padding-left: 3%;
-            padding-right: 3%;
-            cursor: pointer;
-            font-size: small;
-            border-width: thin;
-        }
-        .details {
-            width : 90%;
-            background-color : white;
-            padding-left: 3%;
-            padding-right: 3%;
-            font-size: small;
-            text-align: -webkit-right;
-        }
-        td{
-            border-style: outset;
-            border-width: 0px 0px 1px 0px;
-            width: 50%;
-        }
-        table{
-            text-align: left;
-            width: 95%;
-        }
-    </style>
+    <style include="unibank-style-defaults"></style>
+    <style include="unibank-style-accounts"></style> <!-- Styles for this element -->
     <template>
+        <!-- Show progress bar on initial load -->
         <paper-material id="progress" elevation="0" class="progress" main>
             <paper-progress indeterminate style="width:98%"></paper-progress>
             Fetching your data...
         </paper-material>
+        <!-- The dashboard view with user's info -->
         <template is="dom-repeat" id="banks" items="{{banks}}">
             <paper-material elevation="1" style="padding:5px;text-align:center;">
                 <table>
@@ -183,22 +117,6 @@
                 </template>
             </paper-material>
         </template>
-        <paper-dialog id="transferDialog">
-            <paper-material elevation="0" style="padding:5px;" main>
-                Create a new Transfer<br/>
-                <form is="iron-form" id="createTransferForm">
-                    <paper-input name="toBankID" label="Bank ID" required allowed-pattern="[a-zA-Z0-9_-]" auto-validate error-message="Value required" autofocus></paper-input>
-                    <paper-input name="toAccID" label="Account ID" required allowed-pattern="[a-zA-Z0-9_-]" auto-validate error-message="Value required"></paper-input>
-                    <paper-input name="trnAmt" label="Amount" required allowed-pattern="[0-9]" auto-validate error-message="Value required"></paper-input>
-                    <paper-input name="desc" label="Description"></paper-input>
-                    <div align="center" style="padding-top:10px;">
-                        <paper-button raised on-click="_MakeTransfer" style="background-color:green;color:white">Transfer</paper-button>
-                        <paper-button raised onclick="transferDialog.close()" style="background-color:green;color:white">Cancel</paper-button>
-                    </div>
-                    <iron-a11y-keys id="a11y" keys="enter" on-keys-pressed="_MakeTransfer"></iron-a11y-keys>
-                </form>
-            </paper-material>
-        </paper-dialog>
         <paper-dialog id="confirmDialog">
             <paper-material elevation="0" style="padding:5px;" main>
                 [[confirmation]]<br/>
@@ -208,45 +126,70 @@
                 </div>
             </paper-material>
         </paper-dialog>
+        <unibank-ajax id="ajax" banks="{{banks}}"></unibank-ajax>
+        <unibank-pop-ups id="popUps" action="{{popUpAction}}" message="[[message]]"></unibank-pop-ups>
+        <unibank-firebase-actions id="firebase"></unibank-firebase-actions>
     </template>
     <script>
     Polymer({
       is: 'unibank-accounts',
       properties : {
+        /* Notification received after ajax request to update banks */
         banks : {
             type: Object,
             observer: '_BankChanged',
         },
-        action : {
-            type: Object,
-            readOnly: true,
-            notify: true,
+        /* Notification received from pop-up.
+            Check unibank-pop-ups.html for details about the object
+         */
+        popUpAction : {
+            type : Object,
+            observer : '_PopUpActionChanged',
         },
       },
+      /* Called by host to refresh users transactions */
+      updateBanks : function(){
+        this.$.ajax.getBanks();
+      },
+      /* Toggle iron-collapse to open or close on click */
       _Toggle : function(e){
         this.$$('#A' + e.model.item.id).toggle(); //Added A to ensure valid id
       },
+      /* For initial load, remove progress bar when the user info is received */
       _BankChanged : function(newBank, oldBank){
-        Polymer.dom(this.root).removeChild(this.$.progress);
+        if(this.children.progress) {
+            Polymer.dom(this.root).removeChild(this.$.progress);
+        }
       },
+      /* When transfer icon-button is clicked */
       _Transfer : function(e){
         this.userAccountID = e.model.item.name;
         //item.id is accID_bankID
         this.userBankID = e.model.item.id.replace(e.model.item.name + "_","");
-        this.$.transferDialog.open();
+        this.$.popUps.open('transfer','transfer');
       },
-      _MakeTransfer: function(){
-        action = {
-            type : "transfer",
+      /* Notification received from pop-up */
+      _PopUpActionChanged : function(action, oldAction){
+        switch (action.name) {
+            case 'transfer' :
+                this._MakeTransfer(action.values);
+                break;
+        }
+      },
+      /* Send params to firebase to make transfer
+            @params {Object} values as received from pop-up
+      */
+      _MakeTransfer: function(values){
+        params = { type : "transfer",
             from_bank : this.userBankID,
             from_acc : this.userAccountID,
-            to_bank : this.$.createTransferForm.toBankID.value,
-            to_acc : this.$.createTransferForm.toAccID.value,
-            amount : this.$.createTransferForm.trnAmt.value,
-            description : this.$.createTransferForm.desc.value,
+            to_bank : values.to_bank,
+            to_acc : values.to_acc,
+            amount : values.amount,
+            description : values.description,
         };
-        this._setAction(action);
-        this.$.transferDialog.close();
+        this.$.ajax.transfer(params);
+        this.$.popUps.close('transfer');
       },
       _CheckTransaction : function(transactions){
         if (transactions !== undefined){
@@ -256,42 +199,85 @@
         }
         else return false;
       },
+      /* Remove the selected bank
+          @param {Object} event which contains the bank-ID
+      */
       _RemoveBank: function(e){
-        action ={
+        this.action ={
             type: "remove bank",
             bank: e.model.item.id,
         };
-        this.confirmation = 'Are you sure you want to remove bank ' + action.bank + '?';
+        this.confirmation = 'Are you sure you want to remove bank ' + this.action.bank + '?';  //Ask confirmation before delete
         this.$.confirmDialog.open();
-        this.tmp_action = action;
       },
+      /* Remove the selected account
+          @param {Object} event contains the id in the form accID_bankID
+      */
       _RemoveAccount: function(e){
-        action = {
+        this.action = {
             type: "remove account",
             bank: e.model.item.id.replace(e.model.item.name + "_",""),
             account: e.model.item.name,
         };
-        this.confirmation = 'Are you sure you want to remove account ' + action.account + '?';
+        this.confirmation = 'Are you sure you want to remove account ' + this.action.account + '?';
         this.$.confirmDialog.open();
-        this.tmp_action = action;
       },
+      /* Verify the bank which is clicked
+         @param {Object} event contains the item in the template and id is the bank id
+      */
       _VerifyBank: function(e){
-        action = {
-            type: "verify bank",
-            bank: e.model.item.id,
-        };
-        this._setAction(action);
+        this.$.popUps.open('bankAuth');
+        bank = e.model.item.id;
+        this.$.ajax.addBank(bank);
+        this.$.firebase.checkAuth(bank)
+            .then(function(){
+                this.updateBanks();
+                this.$.popUps.close('bankAuth');
+            }.bind(this));
       },
+      /* Verify the account which is clicked
+         @param {Object} event contains the item in the template and id is the account id in the form accID_bankID
+      */
       _VerifyAcc: function(e){
-        action = {
-            type: "verify bank",
-            bank: e.model.item.id.replace(e.model.item.name + "_",""),
-        }
-        this._setAction(action);
+        this.$.popUps.open('bankAuth');
+        bank = e.model.item.id.replace(e.model.item.name + "_","");
+        this.$.ajax.addBank(bank);
+        this.$.firebase.checkAuth(bank)
+            .then(function(){
+                this.updateBanks();
+                this.$.popUps.close('bankAuth');
+            }.bind(this));
       },
+      /* When user confirms from the dialog box */
       _Confirm : function(){
-        this._setAction(this.tmp_action);
-        this.$.confirmDialog.close();
+        switch(this.action.type){
+            case "remove bank" :
+                this.$.firebase.removeBank(this.action.bank)  //Remove bank from database
+                    .then(function(){
+                        this.updateBanks();
+                        this.message = "Request has been sent";
+                        this.$.popUps.open('msgBox');
+                    }.bind(this))
+                    .catch(function(error){
+                        this.message = "Error connecting to database. Try again in some time";
+                        this.$.popUps.open('msgBox');
+                    }.bind(this));
+                this.$.confirmDialog.close();
+                break;
+            case "remove account" :
+                this.$.firebase.removeAccount(this.action.bank, this.action.account)  //Remove the account from database
+                    .then(function(){
+                        this.updateBanks();
+                        this.message = "Request has been sent";
+                        this.$.popUps.open('msgBox');
+                    }.bind(this))
+                    .catch(function(error){
+                        this.message = "Error connecting to database. Try again in some time";
+                        this.$.popUps.open('msgBox');
+                    }.bind(this));
+                this.$.confirmDialog.close();
+                break;
+        }
       },
     });
   </script>

@@ -1,11 +1,13 @@
+<!-- Content to display on home page -->
+<!-- Import polymer dependencies -->
+<link rel="import" href="/bower_components/paper-material/paper-material.html">
+<link rel="import" href="/bower_components/paper-button/paper-button.html">
+<link rel="import" href="/bower_components/iron-icons/av-icons.html">
+<!-- Import unibank style dependencies -->
+<link rel="import" href="/src/unibank-styles/unibank-style-defaults.html"/>
 <dom-module id="unibank-home">
     <template>
-        <style>
-            paper-material {
-                font-family: "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
-                font-weight: 4;
-            }
-        </style>
+        <style include="unibank-style-defaults"></style>
         <paper-material elevation="0" style="padding:10px;" main>
             <p>Welcome to the <span style="font-weight:bold;">UniBank</span> App!</p></br>
             Using the <a href="https://openbankproject.com/">openbankproject</a> sandbox environment, the <a href="https://www.polymer-project.org/">Google Polymer project</a> framework, a <a href="https://firebase.google.com/">Firebase</a> database and Google Cloud's <a href="https://cloud.google.com/">appengine</a> service, I have created this sample multibank account management application.</br>
@@ -15,8 +17,8 @@
         </paper-material>
     </template>
     <script>
-    Polymer({
-      is: 'unibank-home',
-    });
-  </script>
+        Polymer({
+          is: 'unibank-home',
+        });
+    </script>
 </dom-module>

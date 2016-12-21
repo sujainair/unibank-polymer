@@ -1,0 +1,127 @@
+<!-- All the ajax api calls that are made by unibank -->
+<!-- Import polymer dependencies -->
+<link rel="import" href="/bower_components/iron-ajax/iron-ajax.html">
+<link rel="import" href="/bower_components/polymerfire/firebase-auth.html">
+<!-- Import unibank dependencies -->
+<link rel="import" href="/src/unibank-app/unibank-pop-ups.html">
+
+<dom-module id="unibank-ajax">
+    <template>
+        <iron-ajax id="ajaxAddBank"
+                   url="/user/addBank"
+                   method="POST"
+                   handle-as="json"
+                   on-response="_AddBank"
+                   debounce-duration="300"></iron-ajax>
+        <iron-ajax id="ajaxGetBanks"
+                   url="/user/getBanks"
+                   method="GET"
+                   handle-as="json"
+                   on-response="_GetBanks"
+                   debounce-duration="300"></iron-ajax>
+        <iron-ajax id="ajaxMakeTransfer"
+                   url="/user/makeTransfer"
+                   content-type="application/json"
+                   method="POST"
+                   handle-as="json"
+                   on-response="_TransferDone"
+                   debounce-duration="300"></iron-ajax>
+        <unibank-pop-ups id="popUps" message="[[message]]"></unibank-pop-ups>
+        <firebase-auth id="auth" user="{{user}}"></firebase-auth>
+    </template>
+    <script>
+        Polymer({
+            is: 'unibank-ajax',
+            properties : {
+                banks : {
+                    type : Object,
+                    readOnly : true,
+                    notify : true,
+                },
+            },
+            /* Add the bank for the user in database. The bank ID is posted as parameter when the request is generated
+                @param {Object} bank contains the bank ID to be added for the user in the form of { bank : <value> }
+            */
+            addBank : function(bank){
+                this.$.ajaxAddBank.params = { bank : bank };
+                this.$.ajaxAddBank.generateRequest();
+
+            },
+            /* Reaches here when the addBank API response is received.
+               API returns text value "success". Then open pop-up window so that user can do auth with openbank sandbox.
+               Shows error message if the API response is not "success".
+            */
+            _AddBank: function(event){
+                if(event.detail.response.value === "success"){
+                    window.open("/unibank-loggedin.html?action=addBank");
+                }
+                else{
+                    this.message = "An error occured";
+                    this.$.popUps.open('msgBox');
+                }
+            },
+            /* Get the users bank and transaction details. The user token is passed as params to verify firebase user.
+            */
+            getBanks : function(){
+                this.user.getToken(true)
+                    .then(function(idToken){
+                        this.$.ajaxGetBanks.params = {idToken : idToken};
+                        this.$.ajaxGetBanks.generateRequest();
+                    }.bind(this))
+                    .catch(function(error){
+                        this.message = "Error connecting to database";
+                        this.$.popUps.open('msgBox');
+                    }.bind(this));
+            },
+            /* Reached here when the getBanks API response is received.
+                The API returns Object with all the users transactions and other details.
+                This is then used to refresh the users view.
+            */
+            _GetBanks : function(event){
+                banks = event.detail.response;
+                this._setBanks(banks);
+            },
+            /* Make a transaction for the user.
+                @param {Object} contains the details for making the transfer.
+                                Object looks like { type : "transfer",
+                                    from_bank : <users_bank_id>,
+                                    from_acc : <users_account_id>,
+                                    to_bank : <other_party_bank_id>,
+                                    to_acc : <other_party_acc_id>,
+                                    amount : <amount>,
+                                    description : <description>,
+                                }
+            */
+            transfer : function(params){
+                this.user.getToken(true)
+                    .then(function(idToken){
+                        body = [];
+                        body.push({idToken : idToken});
+                        body.push(params);
+                        this.$.ajaxMakeTransfer.body = { params : body };
+                        this.$.ajaxMakeTransfer.generateRequest();
+                        this.message = "Request has been sent";
+                        this.$.popUps.open('msgBox');
+                    }.bind(this))
+                    .catch(function(error){
+                        this.message = "Error connecting to database";
+                        this.$.popUps.open('msgBox');
+                    }.bind(this));
+            },
+            /* Reached here when transfer is done and API returns result.
+                Contains errors if any or the transaction id.
+            */
+            _TransferDone : function(event){
+                response = event.detail.response;
+                if(response.hasOwnProperty('error')){
+                    this.message = response.error;
+                    this.$.popUps.open('msgBox');
+                    return;
+                }
+                this.message = "Transfer done with ID : " + response.id;
+                this.$.popUps.open('msgBox');
+                this.getBanks();
+            },
+        });
+    </script>
+</dom-module>

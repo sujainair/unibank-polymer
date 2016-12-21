@@ -1,391 +1,134 @@
+<!-- Import polymer dependencies -->
 <link rel="import" href="/bower_components/polymer/polymer.html">
-<link rel="import" href="/bower_components/polymerfire/firebase-app.html">
 <link rel="import" href="/bower_components/polymerfire/firebase-auth.html">
-<link rel="import" href="/bower_components/polymerfire/firebase-document.html">
-<link rel="import" href="/bower_components/paper-dialog/paper-dialog.html">
-<link rel="import" href="/bower_components/paper-button/paper-button.html">
-<link rel="import" href="/bower_components/paper-header-panel/paper-header-panel.html">
 <link rel="import" href="/bower_components/app-route/app-location.html">
 <link rel="import" href="/bower_components/app-route/app-route.html">
-<link rel="import" href="/bower_components/iron-ajax/iron-ajax.html">
-<link rel="import" href="/bower_components/paper-toolbar/paper-toolbar.html">
-<link rel="import" href="/bower_components/paper-icon-button/paper-icon-button.html">
-<link rel="import" href="/bower_components/paper-menu/paper-menu.html">
-<link rel="import" href="/bower_components/paper-menu-button/paper-menu-button.html">
-<link rel="import" href="/bower_components/paper-item/paper-item.html">
+<!-- iron-icons required by header panel -->
 <link rel="import" href="/bower_components/iron-icons/iron-icons.html">
-<link rel="import" href="/bower_components/paper-input/paper-input.html">
-<link rel="import" href="/bower_components/iron-form/iron-form.html">
-<link rel="import" href="/bower_components/paper-spinner/paper-spinner.html">
-<link rel="import" href="/bower_components/iron-a11y-keys/iron-a11y-keys.html">
-<link rel="import" href="/bower_components/paper-progress/paper-progress.html">
-<link rel="import" href="/bower_components/paper-material/paper-material.html">
-<link rel="import" href="/bower_components/paper-toast/paper-toast.html">
-<link rel="import" href="/src/unibank-app/unibank-accounts.html">
+<!--Import unibank dependencies -->
+<link rel="import" href="/src/unibank-app/unibank-pop-ups.html">
+<link rel="import" href="/src/unibank-app/unibank-firebase-actions.html">
 
 <dom-module id="unibank-app">
     <template>
-        <style>
-            paper-icon-button.logo {
-                height:50px;
-                width:50px;
-            }
-            paper-material {
-                font-family: "Century Gothic", CenturyGothic, AppleGothic, sans-serif;
-                font-weight: 4;
-            }
-            @media (max-width: 600px){
-                .bg-only {
-                    display:none;
-                }
-            }
-            @media (min-width:601px){
-                .sm-only{
-                    display:none;
-                }
-            }
-        </style>
         <app-location route="{{route}}"></app-location>
         <app-route route="{{route}}"
                    tail="{{tail}}"></app-route>
-        <iron-ajax id="ajaxAddBank"
-            url="/user/addBank"
-            method="POST"
-            handle-as="json"
-            on-response="_AddBank"
-            debounce-duration="300"></iron-ajax>
-        <iron-ajax id="ajaxGetBanks"
-                   url="/user/getBanks"
-                   method="GET"
-                   handle-as="json"
-                   on-response="_UpdateBanks"
-                   debounce-duration="300"></iron-ajax>
-        <iron-ajax id="ajaxMakeTransfer"
-                   url="/user/makeTransfer"
-                   content-type="application/json"
-                   method="POST"
-                   handle-as="json"
-                   on-response="_TransferDone"
-                   debounce-duration="300"></iron-ajax>
-        <paper-header-panel>
-            <paper-toolbar>
-                <paper-icon-button class="logo" src="/img/logo.png" onclick="window.location='/index.html?page=home'"></paper-icon-button>
-                <div class="title">Welcome {{user.displayName}}</div>
-                <paper-menu-button class="sm-only" no-overlap>
-                    <paper-icon-button class="dropdown-trigger" icon="menu"></paper-icon-button>
-                    <paper-menu class="dropdown-content" style="overflow:hidden;">
-                        <template is="dom-repeat" id="buttonItems1" items="{{buttons}}">
-                            <paper-item on-click="_ClickFunction">{{item.name}}</paper-item>
-                        </template>
-                    </paper-menu>
-                </paper-menu-button>
-                <template is="dom-repeat" id="buttonItems2" items="{{buttons}}">
-                    <paper-button class="bg-only" on-click="_ClickFunction" style="{{item.style}}"><iron-icon icon="{{item.icon}}"></iron-icon>{{item.name}}</paper-button>
-                </template>
-            </paper-toolbar>
-        </paper-header-panel>
-        <unibank-accounts banks="[[banks]]" action="{{accAction}}"></unibank-accounts>
-        <firebase-app id="firebase" auth-domain="unibank-11d5b.firebaseapp.com"
-                      database-url="https://unibank-11d5b.firebaseio.com"
-                      api-key="AIzaSyAyy70wm-UV3SAfrLP92zv5QPSy01MQnQw">
-        </firebase-app>
+        <unibank-header id="header" buttons="[[buttons]]" action="{{headerAction}}"
+                        icon="/img/logo.png" title="Welcome {{user.displayName}}" ></unibank-header> <!-- dependency imported dynamically only if user logged in -->
+        <unibank-accounts id="accounts"></unibank-accounts> <!-- dependency imported when user is authenticated and dashboard is to be viewed -->
         <firebase-auth id="auth" user="{{user}}" on-error="_authError" status-known="{{statusKnown}}">
         </firebase-auth>
-        <firebase-document id="firebasedoc"
-                path="{{firebasePath}}"
-                data="{{firebaseData}}">
-        </firebase-document>
-        <paper-dialog style="background-color:grey;" id="loginFailDialog" always-on-top="true" modal="true">
-            <paper-material elevation="0" style="padding:5px;" main>
-                Login required to view this page<br>
-                <div align="center" style="padding-top:10px;">
-                    <paper-button raised onclick="window.location='/index.html'" style="background-color:white;">OK</paper-button>
-                </div>
-            </paper-material>
-        </paper-dialog>
-        <paper-toast id="msgDialog" duration="0" text="[[message]]">
-            <paper-button raised onclick="msgDialog.close()">OK</paper-button>
-        </paper-toast>
-        <paper-dialog id="waitAuth" always-on-top="true">
-            <paper-material elevation="0" style="padding:5px;" main>
-                <paper-spinner active></paper-spinner>
-                Please authenticate with the bank on pop-up window!
-            </paper-material>
-        </paper-dialog>
-        <paper-dialog id="redirectDialog" always-on-top="true" modal="true">
-            <paper-material elevation="0" style="padding:5px;" main>
-                <paper-progress indeterminate style="width:98%"></paper-progress>
-                You will be redirected to your bank to authenticate.
-            </paper-material>
-        </paper-dialog>
-        <paper-dialog id="addDialog">
-            <paper-material elevation="0" style="padding:5px;" main>
-                Add new bank account<br>
-                <form is="iron-form" id="addAccountForm">
-                    <paper-input name="bank" label="Bank ID" allowed-pattern="[a-zA-Z0-9_-]" required auto-validate error-message="Value required" autofocus></paper-input>
-                    <paper-input name="ac_name" label="Account ID" allowed-pattern="[a-zA-Z0-9_-]" required auto-validate error-message="Value required"></paper-input>
-                    <div align="center" style="padding-top:10px;">
-                        <paper-button raised on-click="_AddAccount" style="background-color:green;color:white"><iron-icon icon="add-box"></iron-icon>ADD</paper-button>
-                    </div>
-                    <iron-a11y-keys id="a11y" keys="enter" on-keys-pressed="_AddAccount"></iron-a11y-keys>
-                </form>
-            </paper-material>
-        </paper-dialog>
+        <unibank-pop-ups id="popUps" message="[[message]]" action="{{popUpAction}}"></unibank-pop-ups>
+        <unibank-firebase-actions id="firebase"></unibank-firebase-actions>
     </template>
     <script>
     Polymer({
       is: 'unibank-app',
       properties : {
-      	page : String,
+      	/* The tail Object read from app-route, contains query parameters passed.
+      	    Observer is used to identify when the params change.
+      	*/
       	tail : {
       		type: Object,
-          	observer: '_TailChanged'
+          	observer: '_TailChanged',
       	},
+      	/* To identify when firebase auth status is known */
       	statusKnown : {
       	    type : Boolean,
-      	    observer : '_StatusKnownChanged'
+      	    observer : '_StatusKnownChanged',
       	},
+      	/* Buttons to show in the header */
       	buttons : {
-      	    value: [{icon: 'add-box' ,style: 'background-color:limegreen;color:white;' ,name: 'New Account'},
-      	    {icon: 'exit-to-app' ,style: 'background-color:crimson;color:black;' ,name: 'Logout'}]
+      	    value: [{icon: 'add-box' ,style: 'background-color:limegreen;color:white;' ,name: 'New Account', action: 'addaccount'},
+      	    {icon: 'exit-to-app' ,style: 'background-color:crimson;color:black;' ,name: 'Logout', action: 'logout'}]
       	},
-      	accAction : {
+      	/* Notification received from button in header.
+      	    this is the action element in buttons array item.
+      	*/
+      	headerAction : {
       	    type : Object,
-      	    observer : '_AccActionChanged',
+      	    observer : '_HeaderActionChanged',
+      	},
+      	/* Notification received from pop-up.
+      	    Check unibank-pop-ups.html for details of this Object
+      	 */
+      	popUpAction : {
+      	    type : Object,
+      	    observer : '_PopUpActionChanged',
       	},
       },
+      /* Url query parameter changed */
       _TailChanged : function(tail,oldTail){
+      	// Ask user to wait until the API redirects the page
       	if(this.tail.__queryParams.action === 'addBank'){
-            this.$.redirectDialog.open();
+            this.$.popUps.open('redirect');
       	}
       },
+      /* When firebase auth status is known */
       _StatusKnownChanged : function(statusKnown, oldStatusKnown){
-        _this = this;
         if( statusKnown ){
             if(! this.$.auth.signedIn){
-                this.$.loginFailDialog.open();
+                /* Inform if not logged-in. Force user back to index */
+                this.$.popUps.open('loginFailed');
             }
             else {
+                /* When adding new bank for user. New page opened just for redirecting to bank */
                 if(this.tail.__queryParams.action === 'addBank'){
                     this.user.getToken(true)
                         .then(function(idToken){
+                            /* Call API which will redirect user to authenticate with bank */
                             window.location = "/user/addBank?idToken=" + idToken;
                         })
                         .catch(function(error) {
-                            _this.$.redirectDialog.close();
-                            _this.message = "Error connecting to database. Try again in some time"
-                            _this.$.msgDialog.open();
-                        });
+                            this.$.redirectDialog.close();
+                            this.message = "Error connecting to database. Try again in some time"
+                            this.$.popUps.open('msgBox');
+                        }.bind(this));
                 }
+                /* Open and update dashboard otherwise */
                 else {
-                    this.user.getToken(true)
-                        .then(function(idToken){
-                            _this.$.ajaxGetBanks.params = { idToken : idToken };
-                            _this.$.ajaxGetBanks.generateRequest();
-                        })
-                        .catch(function(error) {
-                            _this.message = "Error connecting to database. Could not load data!"
-                            _this.$.msgDialog.open();
-                            console.log(error);
-                        });
+                    this.importHref('/src/unibank-app/unibank-app-authed-imports.html',function(){
+                        this.$.accounts.updateBanks();
+                    }.bind(this));
                 }
       	    }
         }
       },
-      _ClickFunction : function(e) {
-      	switch(e.model.item.name){
-      		case 'Logout' :
+      /* When button is clicked on the header element */
+      _HeaderActionChanged : function(headerAction, oldHeaderAction) {
+      	switch(headerAction){
+      		case 'logout' :
       			this.$.auth.signOut();
       			window.location = '/index.html';
       			break;
-      		case 'New Account' :
-      		    this.$.addDialog.open();
+      		case 'addaccount' :
+      		    this.$.popUps.open('addAccount','addaccount');
+      		    break;
+      		case 'header_icon_clicked' :
+      		    window.location = '/index.html';
       		    break;
       		default :
       			window.location="#";
       	}
       },
-      _AddAccount : function(){
-        _this = this;
-        bank = this.$.addAccountForm.bank.value;
-        account = this.$.addAccountForm.ac_name.value;
-        uid = this.user.uid;
-        this.firebasePath = "/users/" + uid + "/accounts/" + bank;
-        ref=this.$.firebasedoc.ref;
-        ref.once('value')
-            .then(function(accounts){
-                if(!accounts.val()){
-                    _this.$.waitAuth.open();
-                    path = "/users/" + uid + "/accounts/";
-                    key=ref.push().key;
-                    var accData = {};
-                    accData["validity"] = "invalid";
-                    accData[key] = account;
-                    _this.firebaseData = accData;
-                    _this.$.firebasedoc.save(path,bank)
-                        .then(function(){
-                            _this.$.ajaxAddBank.params = { bank : bank };
-                            _this.$.ajaxAddBank.generateRequest();
-                            _this.$.addDialog.close();
-                        });
-                    ref.once("child_changed",function(childSnapshot, prevChildKey){
-                        if(childSnapshot.val() === "valid"){
-                            _this.$.waitAuth.close();
-                            _this.user.getToken(true)
-                            .then(function(idToken){
-                                _this.$.ajaxGetBanks.params = { idToken : idToken };
-                                _this.$.ajaxGetBanks.generateRequest();
-                            })
-                            .catch(function(error) {
-                                _this.message = "Error connecting to database. Could not load data!"
-                                _this.$.msgDialog.open();
-                            });
-                        }
-                    });
-                }
-                else {
-                    keys = Object.keys(accounts.val())
-                    for(i=0; i<keys.length; i++){
-                        if (accounts.val()[keys[i]] === account){
-                            _this.message = "Account already exists";
-                            _this.$.msgDialog.open();
-                            return;
-                        }
-                        else if(keys[i] === "validity" && accounts.val()[keys[i]] !== "valid" ){
-                            _this.message = "Authenticate with the bank first!";
-                            _this.$.msgDialog.open();
-                            return;
-                        }
-                    }
-                    ref.push(_this.$.addAccountForm.ac_name.value)
-                        .then(function(){
-                            _this.$.addDialog.close();
-                            _this.message = "Details added";
-                            _this.$.msgDialog.open();
-                            _this.user.getToken(true)
-                                .then(function(idToken){
-                                    _this.$.ajaxGetBanks.params = { idToken : idToken };
-                                    _this.$.ajaxGetBanks.generateRequest();
-                                });
-                        });
-                }
-            });
-      },
-      _AddBank: function(event){
-        if(event.detail.response.value === "success"){
-            window.open("/unibank-loggedin.html?action=addBank");
-        }
-        else{
-            this.message = "An error occured";
-            this.$.msgDialog.open();
-        }
-      },
-      _UpdateBanks: function(event){
-            this.banks = event.detail.response;
-      },
-      _AccActionChanged: function(){
-        _this = this;
-        switch(this.accAction.type){
-            case 'transfer' :
-                params = [];
-                this.user.getToken(true)
-                        .then(function(idToken){
-                            params.push({idToken : idToken});
-                            params.push(_this.accAction);
-                            _this.$.ajaxMakeTransfer.body = { 'params' : params };
-                            _this.$.ajaxMakeTransfer.generateRequest();
-                            _this.message = "Request has been sent";
-                            _this.$.msgDialog.open();
-                        })
-                        .catch(function(error) {
-                            _this.message = "Error connecting to database. Try again in some time";
-                            _this.$.msgDialog.open();
-                        });
-                break;
-            case 'remove bank' :
-                this.firebasePath = "/users/" + this.user.uid + "/accounts/" + this.accAction.bank;
-                this.$.firebasedoc.ref.remove()
+      /* When pop-up action is to be performed */
+      _PopUpActionChanged : function(action, oldAction){
+        switch(action.name) {
+            case 'addaccount' :
+                this.$.firebase.addAccount(action.values.bank, action.values.account)
                     .then(function(){
-                        _this.user.getToken(true)
-                            .then(function(idToken){
-                                _this.$.ajaxGetBanks.params = { idToken : idToken };
-                                _this.$.ajaxGetBanks.generateRequest();
-                                _this.message = "Request has been sent";
-                                _this.$.msgDialog.open();
-                            });
-                    })
-                    .catch(function(error) {
-                        _this.message = "Error connecting to database. Try again in some time";
-                        _this.$.msgDialog.open();
-                    });
-                break;
-            case 'remove account' :
-                this.firebasePath = "/users/" + this.user.uid + "/accounts/" + this.accAction.bank;
-                ref = this.$.firebasedoc.ref;
-                ref.once('value')
-                    .then(function(accounts){
-                        keys = Object.keys(accounts.val());
-                        for(i=0; i<keys.length; i++){
-                            if(accounts.val()[keys[i]] === _this.accAction.account){
-                                ref.child(keys[i]).remove()
-                                    .then(function(){
-                                        _this.user.getToken(true)
-                                            .then(function(idToken){
-                                                _this.$.ajaxGetBanks.params = { idToken : idToken };
-                                                _this.$.ajaxGetBanks.generateRequest();
-                                                _this.message = "Request has been sent";
-                                                _this.$.msgDialog.open();
-                                            });
-                                        });
-                            }
-                        }
-                    })
-                    .catch(function(error) {
-                        _this.message = "Error connecting to database. Try again in some time";
-                        _this.$.msgDialog.open();
-                    });
-                break;
-            case 'verify bank' :
-                this.$.ajaxAddBank.params = { bank : this.accAction.bank };
-                this.$.ajaxAddBank.generateRequest();
-                this.$.waitAuth.open();
-                bank = this.accAction.bank;
-                uid = this.user.uid;
-                this.firebasePath = "/users/" + uid + "/accounts/" + bank;
-                ref=this.$.firebasedoc.ref;
-                ref.once("child_changed",function(childSnapshot, prevChildKey){
-                        if(childSnapshot.val() === "valid" || childSnapshot.key === "token" ){
-                            _this.$.waitAuth.close();
-                            _this.user.getToken(true)
-                            .then(function(idToken){
-                                _this.$.ajaxGetBanks.params = { idToken : idToken };
-                                _this.$.ajaxGetBanks.generateRequest();
-                            })
-                            .catch(function(error) {
-                                _this.message = "Error connecting to database. Could not load data!"
-                                _this.$.msgDialog.open();
-                                console.log(error);
-                            });
-                        }
-                    });
+                        this.$.accounts.updateBanks();
+                        this.message = "Details added";
+                        this.$.popUps.open('msgBox');
+                    }.bind(this))
+                    .catch(function(msg){
+                        this.message = msg;
+                        this.$.popUps.open('msgBox');
+                    }.bind(this));
+                this.$.popUps.close('addAccount');
                 break;
         }
-      },
-      _TransferDone: function(event){
-        _this = this;
-        response = event.detail.response;
-        if(response.hasOwnProperty('error')){
-            this.message = response.error;
-            this.$.msgDialog.open();
-            return;
-        }
-        this.message = "Transfer done with ID : " + response.id;
-        this.$.msgDialog.open();
-        this.user.getToken(true)
-                        .then(function(idToken){
-                            _this.$.ajaxGetBanks.params = { idToken : idToken };
-                            _this.$.ajaxGetBanks.generateRequest();
-                        });
       },
     });
   </script>
